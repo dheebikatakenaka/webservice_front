@@ -131,33 +131,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
     const API_BASE_URL = 'http://172.16.50.168:3000';
     const navigate = useNavigate();
 
-    const formatDateForInput = (dateString) => {
-        if (!dateString) return '';
-        try {
-            // Remove any "/Date(" prefix and ")/" suffix if present
-            const cleanDate = dateString.replace(/\/Date\((\d+)\)\//, '$1');
-            
-            // If it's a timestamp (number)
-            if (!isNaN(cleanDate)) {
-                const date = new Date(parseInt(cleanDate));
-                if (!isNaN(date.getTime())) {
-                    return date.toISOString().split('T')[0];
-                }
-            }
-            
-            // If it's a regular date string
-            const date = new Date(dateString);
-            if (!isNaN(date.getTime())) {
-                return date.toISOString().split('T')[0];
-            }
-            
-            return '';
-        } catch (error) {
-            console.error('Date formatting error:', error);
-            return '';
-        }
-    };
-
     const [formData, setFormData] = useState({
         商品名: '',
         商品説明: '',
@@ -179,13 +152,12 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
 
     useEffect(() => {
         if (product) {
-            console.log('Setting form data:', product);
             setFormData({
                 商品名: product.title || '',
                 商品説明: product.description || '',
                 商品分類: product.category || '',
-                提供開始日: formatDateForInput(product.startDate) || '',  // Fixed date format
-                提供終了日: formatDateForInput(product.endDate) || '',    // Fixed date format
+                提供開始日: formatDateForInput(product.startDate) || '',
+                提供終了日: formatDateForInput(product.endDate) || '',
                 数量: product.quantity || '',
                 単位: product.unit || '',
                 提供者の連絡先: product.contactInfo || '',
@@ -193,6 +165,8 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                 作業所長名: product.managerName || '',
                 画像URL: product.image || ''
             });
+            // Set initial image preview
+            setImagePreview(product.image || '');
         }
     }, [product]);
 
@@ -215,7 +189,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (formData.提供開始日 && formData.提供終了日) {
             const startDate = new Date(formData.提供開始日);
             const endDate = new Date(formData.提供終了日);
-
             if (endDate < startDate) {
                 newErrors.提供終了日 = '提供終了日は開始日より後の日付を選択してください';
             }
@@ -224,52 +197,60 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
- 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-        setIsSubmitting(true);
-        try {
-            const updateData = {
-                itemId: product.title, // Make sure this matches the backend expectation
-                fields: {
-                    商品名: formData.商品名,
-                    商品説明: formData.商品説明,
-                    提供開始日: formData.提供開始日,
-                    提供終了日: formData.提供終了日,
-                    提供者の連絡先: formData.提供者の連絡先,
-                    提供元の住所: formData.提供元の住所,
-                    作業所長名: formData.作業所長名
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (validateForm()) {
+            setIsSubmitting(true);
+            try {
+                const updateData = new FormData();
+                
+                // Add new image if selected
+                if (formData.newImage) {
+                    updateData.append('image', formData.newImage);
                 }
-            };
 
-            const response = await fetch(`${API_BASE_URL}/api/products/update`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updateData)
-            });
+                const productData = {
+                    itemId: product.title,
+                    fields: {
+                        商品名: formData.商品名,
+                        商品説明: formData.商品説明,
+                        商品分類: formData.商品分類,
+                        提供開始日: formData.提供開始日,
+                        提供終了日: formData.提供終了日,
+                        数量: formData.数量,
+                        単位: formData.単位,
+                        提供者の連絡先: formData.提供者の連絡先,
+                        提供元の住所: formData.提供元の住所,
+                        作業所長名: formData.作業所長名
+                    }
+                };
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                updateData.append('data', JSON.stringify(productData));
+
+                const response = await fetch(`${API_BASE_URL}/api/products/update`, {
+                    method: 'POST',
+                    body: updateData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    onUpdate(result.updatedProduct);
+                    onClose();
+                    navigate('/products', { replace: true });
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('更新に失敗しました: ' + error.message);
+            } finally {
+                setIsSubmitting(false);
             }
-
-            const result = await response.json();
-            if (result.success) {
-                onUpdate(result.updatedProduct);
-                onClose();
-                // Use navigate to refresh the page
-                navigate('/products', { replace: true });
-            }
-        } catch (error) {
-            console.error('Update error:', error);
-            alert('更新に失敗しました: ' + error.message);
-        } finally {
-            setIsSubmitting(false);
         }
-    }
-};
+    };
 
     return (
         <ModalOverlay onClick={onClose}>
@@ -299,28 +280,65 @@ const handleSubmit = async (e) => {
                         </FormGroup>
                     </FormSection>
 
-                    <FormGroup>
-                        <Label>提供開始日</Label>
-                        <InputWrapper>
-                            <Input
-                                type="date"
-                                value={formData.提供開始日}
-                                onChange={e => setFormData(prev => ({ ...prev, 提供開始日: e.target.value }))}
-                            />
-                        </InputWrapper>
-                    </FormGroup>
+                    <FormSection>
+                        <FormGroup>
+                            <Label>商品分類</Label>
+                            <InputWrapper>
+                                <Input
+                                    type="text"
+                                    value={formData.商品分類}
+                                    onChange={e => setFormData(prev => ({ ...prev, 商品分類: e.target.value }))}
+                                />
+                            </InputWrapper>
+                        </FormGroup>
 
-                    <FormGroup>
-                        <Label>提供終了日</Label>
-                        <InputWrapper>
-                            <Input
-                                type="date"
-                                value={formData.提供終了日}
-                                onChange={e => setFormData(prev => ({ ...prev, 提供終了日: e.target.value }))}
-                            />
-                            {errors.提供終了日 && <ErrorMessage>{errors.提供終了日}</ErrorMessage>}
-                        </InputWrapper>
-                    </FormGroup>
+                        <FormGroup>
+                            <Label>提供開始日</Label>
+                            <InputWrapper>
+                                <Input
+                                    type="date"
+                                    value={formData.提供開始日}
+                                    onChange={e => setFormData(prev => ({ ...prev, 提供開始日: e.target.value }))}
+                                />
+                            </InputWrapper>
+                        </FormGroup>
+
+                        <FormGroup>
+                            <Label>提供終了日</Label>
+                            <InputWrapper>
+                                <Input
+                                    type="date"
+                                    value={formData.提供終了日}
+                                    onChange={e => setFormData(prev => ({ ...prev, 提供終了日: e.target.value }))}
+                                />
+                                {errors.提供終了日 && <ErrorMessage>{errors.提供終了日}</ErrorMessage>}
+                            </InputWrapper>
+                        </FormGroup>
+                    </FormSection>
+
+                    <FormSection>
+                        <FormGroup>
+                            <Label>数量</Label>
+                            <InputWrapper>
+                                <Input
+                                    type="number"
+                                    value={formData.数量}
+                                    onChange={e => setFormData(prev => ({ ...prev, 数量: e.target.value }))}
+                                />
+                            </InputWrapper>
+                        </FormGroup>
+
+                        <FormGroup>
+                            <Label>単位</Label>
+                            <InputWrapper>
+                                <Input
+                                    type="text"
+                                    value={formData.単位}
+                                    onChange={e => setFormData(prev => ({ ...prev, 単位: e.target.value }))}
+                                />
+                            </InputWrapper>
+                        </FormGroup>
+                    </FormSection>
 
                     <FormSection>
                         <FormGroup>

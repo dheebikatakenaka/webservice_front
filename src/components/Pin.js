@@ -95,8 +95,7 @@ const Pin = ({
     contactInfo, 
     address, 
     managerName, 
-    onDeleteSuccess,
-    refreshGrid 
+    onDeleteSuccess 
 }) => {
     const navigate = useNavigate();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -126,32 +125,10 @@ const Pin = ({
         });
     };
 
-// In Pin.js - Update the handleDelete function
-const handleDelete = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodeURIComponent(title)}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            setShowDeleteConfirm(false);
-            // Use navigate instead of window.location.reload
-            navigate('/products', { replace: true });
-            if (onDeleteSuccess) {
-                await onDeleteSuccess();
-            }
-        } else {
-            throw new Error(result.message);
-        }
-    } catch (error) {
-        console.error('Delete error:', error);
-        alert('削除に失敗しました: ' + error.message);
-    }
-};
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        setShowDeleteConfirm(true);
+    };
 
     const handleEdit = (e) => {
         e.stopPropagation();
@@ -161,63 +138,54 @@ const handleDelete = async () => {
     const confirmDelete = async () => {
         setIsDeleting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodeURIComponent(title)}`, {
+            const response = await fetch(`/api/products/delete/${encodeURIComponent(title)}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             const data = await response.json();
             
             if (data.success) {
                 setShowDeleteConfirm(false);
                 setShowDeleteCompletion(true);
-                
-                // 削除成功後の処理
                 if (onDeleteSuccess) {
-                    await onDeleteSuccess(); // awaitを追加
-                    window.location.reload()
-                }
-                if (refreshGrid) {
-                    await refreshGrid(); // awaitを追加
+                    onDeleteSuccess(id);
                 }
             } else {
-                throw new Error(data.message || '削除に失敗しました');
+                throw new Error(data.message);
             }
         } catch (error) {
             console.error('Delete error:', error);
-            alert(ERROR_MESSAGES.DELETE_ERROR);
+            alert('削除に失敗しました: ' + error.message);
         } finally {
             setIsDeleting(false);
         }
     };
 
-    const handleUpdate = async (updatedProduct) => {
+    const handleUpdate = (updatedProduct) => {
         setShowEditModal(false);
         setShowUpdateCompletion(true);
-        if (refreshGrid) {
-            window.location.reload()
-            await refreshGrid();
-        }
+        console.log('Updated product:', updatedProduct);
     };
 
     return (
         <>
-            <PinContainer>
-                <Container onClick={handleClick}>
-                    <PinImage src={image} alt={title} />
-                    <IconsContainer>
-                        <IconButton onClick={handleEdit}>
+            <div>
+                <div onClick={handleClick}>
+                    <img src={image} alt={title} />
+                    <div>
+                        <button onClick={handleEdit}>
                             <MdEdit size={16} />
-                        </IconButton>
-                        <IconButton delete onClick={handleDelete}>
+                        </button>
+                        <button onClick={handleDelete}>
                             <MdDelete size={16} />
-                        </IconButton>
-                    </IconsContainer>
-                    <ImageTitle>{title}</ImageTitle>
-                </Container>
-            </PinContainer>
+                        </button>
+                    </div>
+                    <div>{title}</div>
+                </div>
+            </div>
 
             {showEditModal && (
                 <EditProductModal
@@ -243,6 +211,7 @@ const handleDelete = async () => {
 
             {showDeleteConfirm && (
                 <DeleteConfirmationDialog
+                    productId={title}
                     productName={title}
                     onCancel={() => setShowDeleteConfirm(false)}
                     onDelete={confirmDelete}
