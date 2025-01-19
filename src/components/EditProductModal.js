@@ -131,6 +131,31 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
     const API_BASE_URL = 'http://172.16.50.168:3000';
     const navigate = useNavigate();
 
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        
+        try {
+            // Handle SharePoint date format "/Date(timestamp)/"
+            const sharePointMatch = /\/Date\((\d+)\)\//.exec(dateString);
+            if (sharePointMatch) {
+                const timestamp = parseInt(sharePointMatch[1]);
+                const date = new Date(timestamp);
+                return date.toISOString().split('T')[0];
+            }
+
+            // Handle regular date string
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+
+            return '';
+        } catch (error) {
+            console.error('Date formatting error:', error);
+            return '';
+        }
+    };
+    
     const [formData, setFormData] = useState({
         商品名: '',
         商品説明: '',
