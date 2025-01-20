@@ -224,43 +224,49 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                // Create FormData
                 const formData = new FormData();
 
-                // Add image if exists
+                // Add image if it exists
                 if (formData.newImage) {
                     formData.append('image', formData.newImage);
                 }
 
-                // Create update data
                 const updateData = {
                     itemId: product.title,
                     fields: {
                         商品名: product.title, // Keep original title
                         商品説明: formData.商品説明,
-                        商品分類: formData.商品分類,  // Make sure this is included
+                        商品分類: formData.商品分類, // Include category
                         提供開始日: formData.提供開始日,
                         提供終了日: formData.提供終了日,
-                        数量: formData.数量,          // Make sure this is included
-                        単位: formData.単位,          // Make sure this is included
+                        数量: formData.数量, // Include quantity
+                        単位: formData.単位, // Include unit
                         提供者の連絡先: formData.提供者の連絡先,
                         提供元の住所: formData.提供元の住所,
                         作業所長名: formData.作業所長名
                     }
                 };
 
-                console.log('Sending update data:', updateData); // Debug log
-
-                const response = await fetch(`${API_BASE_URL}/api/products/update`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updateData)
-                });
+                let response;
+                if (formData.newImage) {
+                    // If there's a new image, send as FormData
+                    formData.append('data', JSON.stringify(updateData));
+                    response = await fetch(`${API_BASE_URL}/api/products/update`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    // If no new image, send as JSON
+                    response = await fetch(`${API_BASE_URL}/api/products/update`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+                }
 
                 const result = await response.json();
-                console.log('Update result:', result); // Debug log
 
                 if (result.success) {
                     alert('更新が完了しました');

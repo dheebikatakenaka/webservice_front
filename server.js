@@ -245,7 +245,32 @@ app.delete('/api/products/delete/:title', async (req, res) => {
 // Edit product endpoint
 app.post('/api/products/update', async (req, res) => {
     try {
-        const { itemId, fields } = req.body;
+        let itemId, fields;
+        let newImageKey = null;
+
+        // Handle image and data based on content type
+        if (req.files && req.files.image) {
+            const jsonData = JSON.parse(req.body.data);
+            itemId = jsonData.itemId;
+            fields = jsonData.fields;
+
+            // Handle new image upload
+            const imageFile = req.files.image;
+            newImageKey = `${fields.商品名}-${Date.now()}${path.extname(imageFile.name)}`;
+
+            // Upload new image to S3
+            await s3.putObject({
+                Bucket: 'my-lists-images',
+                Key: newImageKey,
+                Body: imageFile.data,
+                ContentType: imageFile.mimetype
+            }).promise();
+        } else {
+            // No new image, just handle the JSON data
+            itemId = req.body.itemId;
+            fields = req.body.fields;
+        }
+
         console.log('Received update request:', { itemId, fields }); // Debug log
 
         // Get current products.json
@@ -259,44 +284,49 @@ app.post('/api/products/update', async (req, res) => {
             products = [products];
         }
 
-        // Find product by title
+        // Find product to update
         const productIndex = products.findIndex(p => p.Title === itemId);
         if (productIndex === -1) {
-            return res.status(404).json({
-                success: false,
-                message: '商品が見つかりません'
-            });
+            throw new Error('商品が見つかりません');
         }
 
-        // Log original product
-        console.log('Original product:', products[productIndex]);
+        // If there's a new image, delete the old one
+        if (newImageKey && products[productIndex].画像URL) {
+            try {
+                const oldImageKey = products[productIndex].画像URL.split('/').pop();
+                await s3.deleteObject({
+                    Bucket: 'my-lists-images',
+                    Key: oldImageKey
+                }).promise();
+            } catch (error) {
+                console.error('Error deleting old image:', error);
+            }
+        }
 
         // Update product
-        const updatedProduct = {
+        products[productIndex] = {
             ...products[productIndex],
-            商品説明: fields.商品説明,
-            商品分類: fields.商品分類,      // Update category
-            提供開始日: fields.提供開始日,
-            提供終了日: fields.提供終了日,
-            数量: fields.数量,              // Update quantity
-            単位: fields.単位,              // Update unit
+            Title: itemId, // Keep original title
+            商品説明: fields.商品説明 || products[productIndex].商品説明 || '',
+            商品分類: fields.商品分類 || '', // Explicitly update 商品分類
+            提供開始日: fields.提供開始日 || products[productIndex].提供開始日 || '',
+            提供終了日: fields.提供終了日 || products[productIndex].提供終了日 || '',
+            数量: fields.数量 || '', // Explicitly update 数量
+            単位: fields.単位 || '', // Explicitly update 単位
             提供者の連絡先: {
                 Email: fields.提供者の連絡先 || '',
                 LookupValue: products[productIndex].提供者の連絡先?.LookupValue || ''
             },
-            提供元の住所: fields.提供元の住所,
-            作業所長名: fields.作業所長名,
+            提供元の住所: fields.提供元の住所 || products[productIndex].提供元の住所 || '',
+            作業所長名: fields.作業所長名 || products[productIndex].作業所長名 || '',
+            画像URL: newImageKey 
+                ? `https://my-lists-images.s3.ap-northeast-1.amazonaws.com/${newImageKey}`
+                : products[productIndex].画像URL,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
 
-        // Log updated product
-        console.log('Updated product:', updatedProduct);
-
-        // Update the products array
-        products[productIndex] = updatedProduct;
-
-        // Save back to S3
+        // Save updated products.json
         await s3.putObject({
             Bucket: 'my-lists-images',
             Key: 'products.json',
@@ -304,15 +334,17 @@ app.post('/api/products/update', async (req, res) => {
             ContentType: 'application/json'
         }).promise();
 
-        return res.status(200).json({
+        console.log('Update successful:', products[productIndex]); // Debug log
+
+        res.json({
             success: true,
             message: '更新が完了しました',
-            updatedProduct: updatedProduct
+            updatedProduct: products[productIndex]
         });
 
     } catch (error) {
         console.error('Update error:', error);
-        return res.status(500).json({
+        res.status(500).json({
             success: false,
             message: '更新に失敗しました: ' + error.message
         });
