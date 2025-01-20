@@ -245,33 +245,8 @@ app.delete('/api/products/delete/:title', async (req, res) => {
 // Edit product endpoint
 app.post('/api/products/update', async (req, res) => {
     try {
-        let itemId, fields, newImageKey;
-        console.log('Request body:', req.body);
-        console.log('Files:', req.files);
-
-        // Handle image and data
-        if (req.files && req.files.image) {
-            // Parse the JSON data from FormData
-            const jsonData = JSON.parse(req.body.data);
-            itemId = jsonData.itemId;
-            fields = jsonData.fields;
-
-            // Handle new image
-            const imageFile = req.files.image;
-            newImageKey = `${fields.商品名}-${Date.now()}${path.extname(imageFile.name)}`;
-
-            // Upload new image
-            await s3.putObject({
-                Bucket: 'my-lists-images',
-                Key: newImageKey,
-                Body: imageFile.data,
-                ContentType: imageFile.mimetype
-            }).promise();
-        } else {
-            // Handle JSON data only
-            itemId = req.body.itemId;
-            fields = req.body.fields;
-        }
+        const { itemId, fields } = req.body;
+        console.log('Updating product with ID:', itemId);
 
         // Get current products.json
         const data = await s3.getObject({
@@ -284,7 +259,7 @@ app.post('/api/products/update', async (req, res) => {
             products = [products];
         }
 
-        // Find and update product
+        // Find product by title (itemId)
         const productIndex = products.findIndex(p => p.Title === itemId);
         if (productIndex === -1) {
             return res.status(404).json({
@@ -293,23 +268,9 @@ app.post('/api/products/update', async (req, res) => {
             });
         }
 
-        // Delete old image if new one exists
-        if (newImageKey && products[productIndex].画像URL) {
-            const oldImageKey = products[productIndex].画像URL.split('/').pop();
-            try {
-                await s3.deleteObject({
-                    Bucket: 'my-lists-images',
-                    Key: oldImageKey
-                }).promise();
-            } catch (error) {
-                console.error('Error deleting old image:', error);
-            }
-        }
-
-        // Update product data
+        // Update product (keeping the original title)
         products[productIndex] = {
             ...products[productIndex],
-            Title: fields.商品名,
             商品説明: fields.商品説明 || '',
             商品分類: fields.商品分類 || '',
             提供開始日: fields.提供開始日 || '',
@@ -322,9 +283,6 @@ app.post('/api/products/update', async (req, res) => {
             },
             提供元の住所: fields.提供元の住所 || '',
             作業所長名: fields.作業所長名 || '',
-            画像URL: newImageKey 
-                ? `https://my-lists-images.s3.ap-northeast-1.amazonaws.com/${newImageKey}`
-                : products[productIndex].画像URL,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
@@ -337,7 +295,6 @@ app.post('/api/products/update', async (req, res) => {
             ContentType: 'application/json'
         }).promise();
 
-        console.log('Update successful');
         return res.status(200).json({
             success: true,
             message: '更新が完了しました',
