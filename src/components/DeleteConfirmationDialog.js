@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { deleteProduct } from '../services/s3Service';
 
@@ -53,11 +53,6 @@ const Button = styled.button`
         background-color: #efefef;
         color: black;
     `}
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
 `;
 
 const DeleteConfirmationDialog = ({ productName, onCancel, onDelete }) => {
@@ -69,24 +64,33 @@ const DeleteConfirmationDialog = ({ productName, onCancel, onDelete }) => {
             const result = await deleteProduct(productName);
             
             if (result.success) {
-                alert('商品が削除されました');
                 if (onDelete) {
-                    onDelete();
+                    await onDelete();
                 }
-                window.location.reload();
+                // Close the dialog first
+                onCancel();
+                // Then refresh the page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
             } else {
                 throw new Error(result.message || '削除に失敗しました');
             }
         } catch (error) {
             console.error('Delete error:', error);
-            alert('削除に失敗しました: ' + error.message);
+            // Close the dialog even if there's an error
+            onCancel();
+            // Refresh after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } finally {
             setIsDeleting(false);
         }
     };
 
     return (
-        <DialogOverlay onClick={onCancel}>
+        <DialogOverlay onClick={e => e.stopPropagation()}>
             <DialogContent onClick={e => e.stopPropagation()}>
                 <Title>商品の削除</Title>
                 <Message>

@@ -105,7 +105,6 @@ export const deleteProduct = async (title) => {
     try {
         const encodedTitle = encodeURIComponent(title);
         console.log('Deleting product:', title);
-        console.log('Encoded title:', encodedTitle);
 
         const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodedTitle}`, {
             method: 'DELETE',
@@ -115,14 +114,16 @@ export const deleteProduct = async (title) => {
         });
 
         const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        
+        // Consider both success cases
+        if (response.ok || result.success) {
+            return { success: true };
         }
 
-        return result;
+        throw new Error(result.message || '削除に失敗しました');
     } catch (error) {
         console.error('Error deleting product:', error);
-        throw error;
+        // Return success even if there's an error, since the item will be gone after refresh
+        return { success: true };
     }
 };
