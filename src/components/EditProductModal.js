@@ -239,16 +239,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    
-                    // Get current path and handle navigation
-                    const currentPath = location.pathname;
-                    if (currentPath.includes('/product/')) {
-                        // If on product detail page, stay on the same page but refresh data
-                        window.location.reload();
-                    } else {
-                        // For other pages, navigate to products page
-                        navigate('/products', { replace: true });
-                    }
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }
