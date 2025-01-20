@@ -244,6 +244,8 @@ app.delete('/api/products/delete/:title', async (req, res) => {
 app.post('/api/products/update', async (req, res) => {
     try {
         const { itemId, fields } = req.body;
+        console.log('Updating product:', itemId);
+        console.log('Update fields:', fields);
 
         const getCommand = new GetObjectCommand({
             Bucket: 'my-lists-images',
@@ -262,26 +264,34 @@ app.post('/api/products/update', async (req, res) => {
             throw new Error('商品が見つかりません');
         }
 
-        // Preserve the existing image key
-        const existingImageKey = products[productIndex].画像URL;
+        // Preserve existing data
+        const existingProduct = products[productIndex];
+        const existingImageKey = existingProduct.画像URL;
 
+        // Update product with new fields while preserving existing structure
         products[productIndex] = {
-            ...products[productIndex],
+            ...existingProduct,
             Title: fields.商品名,
-            商品説明: fields.商品説明,
-            提供開始日: fields.提供開始日,
-            提供終了日: fields.提供終了日,
+            商品説明: fields.商品説明 || '',
+            商品分類: fields.商品分類 || '',
+            提供開始日: fields.提供開始日 || '',
+            提供終了日: fields.提供終了日 || '',
+            数量: fields.数量 ? parseInt(fields.数量, 10) : existingProduct.数量,
+            単位: fields.単位 || '',
             提供者の連絡先: {
-                Email: fields.提供者の連絡先,
-                LookupValue: products[productIndex].提供者の連絡先?.LookupValue
+                Email: fields.提供者の連絡先 || '',
+                LookupValue: existingProduct.提供者の連絡先?.LookupValue || ''
             },
-            提供元の住所: fields.提供元の住所,
-            作業所長名: fields.作業所長名,
+            提供元の住所: fields.提供元の住所 || '',
+            作業所長名: fields.作業所長名 || '',
             画像URL: existingImageKey,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
 
+        console.log('Updated product:', products[productIndex]);
+
+        // Save updated products.json
         const updateCommand = new PutObjectCommand({
             Bucket: 'my-lists-images',
             Key: 'products.json',
@@ -297,6 +307,7 @@ app.post('/api/products/update', async (req, res) => {
             画像URL: signedUrl
         };
 
+        console.log('Update successful');
         res.json({
             success: true,
             message: '更新が完了しました',
