@@ -146,7 +146,6 @@ const ProductDetailPage = () => {
       setShowEditModal(false);
       setShowUpdateCompletion(true);
       console.log('Updated product:', updatedProduct);
-      window.location.reload();
     } catch (error) {
       console.error('Update error:', error);
       setError('更新に失敗しました');
@@ -167,7 +166,6 @@ const ProductDetailPage = () => {
     if (!dateString) return '未設定';
 
     try {
-      // Handle SharePoint date format "/Date(1234567890000)/"
       if (dateString.includes('/Date(')) {
         const timestamp = parseInt(dateString.replace('/Date(', '').replace(')/', ''));
         return new Date(timestamp).toLocaleDateString('ja-JP');
@@ -226,14 +224,14 @@ const ProductDetailPage = () => {
           <InfoItem>
             <InfoLabel>数量</InfoLabel>
             <InfoValue>
-              {state.quantity ? `${state.quantity}` : '未設定'}
+              {state.quantity || '未設定'}
             </InfoValue>
           </InfoItem>
 
           <InfoItem>
             <InfoLabel>単位</InfoLabel>
             <InfoValue>
-              {state.unit ? `${state.unit}` : '未設定'}
+              {state.unit || '未設定'}
             </InfoValue>
           </InfoItem>
 
@@ -286,13 +284,13 @@ const ProductDetailPage = () => {
         <EditProductModal
           product={{
             ...state,
-            Title: state.title || '未設定', // Changed to match backend expectations
-            商品説明: state.description || '未設定',
-            商品分類: state.category || '未設定',
+            Title: state.title,
+            商品説明: state.description || '',
+            商品分類: state.category || '',
             提供開始日: state.startDate || null,
             提供終了日: state.endDate || null,
-            数量: state.quantity || '',
-            単位: state.unit || '',
+            数量: state.quantity || '', 
+            単位: state.unit || '',     
             提供者の連絡先: {
               Email: state.contactInfo || '',
               LookupValue: state.contactName || ''
