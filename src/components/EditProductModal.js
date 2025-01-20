@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { updateProduct } from '../services/s3Service'; 
+import api from '../api/config';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -197,17 +199,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         }
     }, [product]);
 
-    const handleRedirectAfterEdit = () => {
-        const currentPath = location.pathname;
-        if (currentPath === '/') {
-            window.location.href = '/';
-        } else if (currentPath.includes('/product/')) {
-            window.location.href = '/products';
-        } else {
-            window.location.href = '/products';
-        }
-    };
-
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -232,10 +223,12 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
             setIsSubmitting(true);
             try {
                 const result = await updateProduct(product.title, formData, formData.newImage);
-
+    
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
+                    
+                    // Force a hard refresh to ensure fresh data
                     window.location.reload();
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
@@ -248,7 +241,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
             }
         }
     };
-
     return (
         <ModalOverlay onClick={onClose}>
             <ModalContent onClick={e => e.stopPropagation()}>

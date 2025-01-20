@@ -168,17 +168,6 @@ const AddProductModal = ({ onClose, onAdd }) => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleRedirectAfterAdd = () => {
-        const currentPath = location.pathname;
-        if (currentPath === '/') {
-            window.location.href = '/';
-        } else if (currentPath.includes('/product/')) {
-            window.location.href = '/products';
-        } else {
-            window.location.href = '/products';
-        }
-    };
-
     const validateForm = () => {
         const newErrors = {};
         if (!formData.商品名.trim()) {
@@ -212,7 +201,7 @@ const AddProductModal = ({ onClose, onAdd }) => {
                     }
                     alert('商品が追加されました');
                     onClose();
-                    window.location.reload();
+                    window.location.href = '/products';
                 } else {
                     throw new Error(result.message || '商品の追加に失敗しました');
                 }
