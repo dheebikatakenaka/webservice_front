@@ -246,7 +246,8 @@ app.delete('/api/products/delete/:title', async (req, res) => {
 app.post('/api/products/update', async (req, res) => {
     try {
         const { itemId, fields } = req.body;
-        console.log('Updating product with ID:', itemId);
+        console.log('Updating product:', itemId);
+        console.log('Update fields:', fields);
 
         // Get current products.json
         const data = await s3.getObject({
@@ -259,7 +260,7 @@ app.post('/api/products/update', async (req, res) => {
             products = [products];
         }
 
-        // Find product by title (itemId)
+        // Find product by title
         const productIndex = products.findIndex(p => p.Title === itemId);
         if (productIndex === -1) {
             return res.status(404).json({
@@ -268,26 +269,34 @@ app.post('/api/products/update', async (req, res) => {
             });
         }
 
-        // Update product (keeping the original title)
-        products[productIndex] = {
+        // Update product with new fields
+        const updatedProduct = {
             ...products[productIndex],
-            商品説明: fields.商品説明 || '',
-            商品分類: fields.商品分類 || '',
-            提供開始日: fields.提供開始日 || '',
-            提供終了日: fields.提供終了日 || '',
-            数量: fields.数量?.toString() || '',
-            単位: fields.単位 || '',
-            提供者の連絡先: {
-                Email: fields.提供者の連絡先 || '',
-                LookupValue: products[productIndex].提供者の連絡先?.LookupValue || ''
-            },
-            提供元の住所: fields.提供元の住所 || '',
-            作業所長名: fields.作業所長名 || '',
+            Title: itemId, // Keep original title
+            商品説明: fields.商品説明,
+            商品分類: fields.商品分類,
+            提供開始日: fields.提供開始日,
+            提供終了日: fields.提供終了日,
+            数量: fields.数量,
+            単位: fields.単位,
+            提供者の連絡先: fields.提供者の連絡先 ? {
+                Email: fields.提供者の連絡先,
+                LookupValue: fields.提供者の連絡先
+            } : products[productIndex].提供者の連絡先,
+            提供元の住所: fields.提供元の住所,
+            作業所長名: fields.作業所長名,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
 
-        // Save updated products.json
+        // Log the update
+        console.log('Original product:', products[productIndex]);
+        console.log('Updated product:', updatedProduct);
+
+        // Replace the old product with updated one
+        products[productIndex] = updatedProduct;
+
+        // Save to S3
         await s3.putObject({
             Bucket: 'my-lists-images',
             Key: 'products.json',
@@ -298,7 +307,7 @@ app.post('/api/products/update', async (req, res) => {
         return res.status(200).json({
             success: true,
             message: '更新が完了しました',
-            updatedProduct: products[productIndex]
+            updatedProduct: updatedProduct
         });
 
     } catch (error) {
