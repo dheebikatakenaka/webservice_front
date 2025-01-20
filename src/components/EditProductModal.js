@@ -223,38 +223,27 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                const result = await updateProduct(product.title, formData);
-                
+                const result = await updateProduct(
+                    product.title,
+                    {
+                        商品名: formData.商品名,
+                        商品説明: formData.商品説明,
+                        商品分類: formData.商品分類,
+                        提供開始日: formData.提供開始日,
+                        提供終了日: formData.提供終了日,
+                        数量: formData.数量?.toString(),
+                        単位: formData.単位,
+                        提供者の連絡先: formData.提供者の連絡先,
+                        提供元の住所: formData.提供元の住所,
+                        作業所長名: formData.作業所長名
+                    },
+                    formData.newImage  // Pass the new image if it exists
+                );
+    
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    
-                    // Get current path
-                    const currentPath = location.pathname;
-                    
-                    // Use navigate instead of window.location.reload
-                    if (currentPath.includes('/product/')) {
-                        // If on product detail page, navigate to the same page to refresh
-                        navigate(currentPath, { 
-                            replace: true,
-                            state: {
-                                ...product,
-                                title: formData.商品名,
-                                description: formData.商品説明,
-                                category: formData.商品分類,
-                                startDate: formData.提供開始日,
-                                endDate: formData.提供終了日,
-                                quantity: formData.数量,
-                                unit: formData.単位,
-                                contactInfo: formData.提供者の連絡先,
-                                address: formData.提供元の住所,
-                                managerName: formData.作業所長名
-                            }
-                        });
-                    } else {
-                        // If on other pages, navigate to products page
-                        navigate('/products', { replace: true });
-                    }
+                    window.location.href = '/products';
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }

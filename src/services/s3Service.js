@@ -77,41 +77,34 @@ export const createProduct = async (formData) => {
 
 export const updateProduct = async (itemId, fields, newImage = null) => {
     try {
-        const url = `${API_BASE_URL}/api/products/update`;
-        
-        let requestOptions;
+        console.log('Sending update request:', { itemId, fields });
+
+        let response;
+
         if (newImage) {
+            // If there's a new image, use FormData
             const formData = new FormData();
             formData.append('image', newImage);
             formData.append('data', JSON.stringify({ itemId, fields }));
-            
-            requestOptions = {
+
+            response = await fetch(`${API_BASE_URL}/api/products/update`, {
                 method: 'POST',
-                body: formData,
-                credentials: 'include'
-            };
+                body: formData
+            });
         } else {
-            requestOptions = {
+            // If no new image, send JSON data
+            response = await fetch(`${API_BASE_URL}/api/products/update`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                credentials: 'include',
                 body: JSON.stringify({ itemId, fields })
-            };
-        }
-
-        console.log('Sending request to:', url);
-        console.log('Request options:', requestOptions);
-
-        const response = await fetch(url, requestOptions);
-
-        if (response.status === 204) {
-            return { success: true, message: '更新が完了しました' };
+            });
         }
 
         const result = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(result.message || `HTTP error! status: ${response.status}`);
         }
