@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MdDelete, MdEdit } from 'react-icons/md';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 import CompletionDialog from './CompletionDialog';
@@ -98,11 +98,23 @@ const Pin = ({
     refreshGrid 
 }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showDeleteCompletion, setShowDeleteCompletion] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showUpdateCompletion, setShowUpdateCompletion] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleRedirectAfterDelete = () => {
+        const currentPath = location.pathname;
+        if (currentPath === '/') {
+            navigate('/', { replace: true });
+        } else if (currentPath.includes('/product/')) {
+            navigate('/products', { replace: true });
+        } else {
+            navigate('/products', { replace: true });
+        }
+    };
 
     const handleClick = () => {
         navigate(`/product/${id}`, {
@@ -126,6 +138,7 @@ const Pin = ({
     };
 
     const handleDelete = (e) => {
+        e.preventDefault();
         e.stopPropagation();
         setShowDeleteConfirm(true);
     };
@@ -153,7 +166,7 @@ const Pin = ({
                 if (onDeleteSuccess) {
                     await onDeleteSuccess();
                 }
-                window.location.reload();
+                handleRedirectAfterDelete();
             } else {
                 throw new Error(data.message || '削除に失敗しました');
             }
@@ -170,7 +183,7 @@ const Pin = ({
         setShowUpdateCompletion(true);
         if (refreshGrid) {
             await refreshGrid();
-            window.location.reload();
+            handleRedirectAfterDelete();
         }
     };
 
@@ -179,11 +192,11 @@ const Pin = ({
             <PinContainer>
                 <Container onClick={handleClick}>
                     <PinImage src={image} alt={title} />
-                    <IconsContainer>
-                        <IconButton onClick={handleEdit}>
+                    <IconsContainer onClick={e => e.stopPropagation()}>
+                        <IconButton onClick={handleEdit} type="button">
                             <MdEdit size={16} />
                         </IconButton>
-                        <IconButton delete onClick={handleDelete}>
+                        <IconButton delete onClick={handleDelete} type="button">
                             <MdDelete size={16} />
                         </IconButton>
                     </IconsContainer>
