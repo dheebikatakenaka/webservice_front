@@ -182,13 +182,14 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
 
     useEffect(() => {
         if (product) {
+            console.log('Setting form data:', product); // Debug log
             setFormData({
                 商品名: product.title || '',
                 商品説明: product.description || '',
                 商品分類: product.category || '',
                 提供開始日: formatDateForInput(product.startDate) || '',
                 提供終了日: formatDateForInput(product.endDate) || '',
-                数量: product.quantity || '',
+                数量: product.quantity?.toString() || '',  // Convert to string
                 単位: product.unit || '',
                 提供者の連絡先: product.contactInfo || '',
                 提供元の住所: product.address || '',
@@ -222,28 +223,32 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                const updateData = {
-                    itemId: product.title,
-                    fields: {
-                        商品名: formData.商品名,
-                        商品説明: formData.商品説明,
-                        商品分類: formData.商品分類,
-                        提供開始日: formData.提供開始日,
-                        提供終了日: formData.提供終了日,
-                        数量: formData.数量.toString(), // Convert to string
-                        単位: formData.単位,
-                        提供者の連絡先: formData.提供者の連絡先,
-                        提供元の住所: formData.提供元の住所,
-                        作業所長名: formData.作業所長名
-                    }
-                };
-    
-                const result = await updateProduct(product.title, updateData.fields);
+                const result = await updateProduct(product.title, {
+                    商品名: formData.商品名,
+                    商品説明: formData.商品説明,
+                    商品分類: formData.商品分類,
+                    提供開始日: formData.提供開始日,
+                    提供終了日: formData.提供終了日,
+                    数量: formData.数量?.toString() || '',
+                    単位: formData.単位 || '',
+                    提供者の連絡先: formData.提供者の連絡先,
+                    提供元の住所: formData.提供元の住所,
+                    作業所長名: formData.作業所長名
+                }, formData.newImage);
     
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    window.location.reload();
+                    
+                    // Get current path and handle navigation
+                    const currentPath = location.pathname;
+                    if (currentPath.includes('/product/')) {
+                        // If on product detail page, stay on the same page but refresh data
+                        window.location.reload();
+                    } else {
+                        // For other pages, navigate to products page
+                        navigate('/products', { replace: true });
+                    }
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }
@@ -255,7 +260,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
             }
         }
     };
-    
+
     return (
         <ModalOverlay onClick={onClose}>
             <ModalContent onClick={e => e.stopPropagation()}>
