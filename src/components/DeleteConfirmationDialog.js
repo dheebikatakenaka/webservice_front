@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { deleteProduct } from '../services/s3Service';
 
@@ -53,27 +53,27 @@ const Button = styled.button`
         background-color: #efefef;
         color: black;
     `}
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
-const DeleteConfirmationDialog = ({ productId, productName, onCancel, onDelete }) => {
-    const API_BASE_URL = 'http://172.16.50.168:3000';
-    const [isDeleting, setIsDeleting] = React.useState(false);
+const DeleteConfirmationDialog = ({ productName, onCancel, onDelete }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
         try {
-            const encodedTitle = encodeURIComponent(productName);
-            const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodedTitle}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-    
-            const result = await response.json();
+            const result = await deleteProduct(productName);
             
             if (result.success) {
-                onDelete();
+                alert('商品が削除されました');
+                if (onDelete) {
+                    onDelete();
+                }
+                window.location.reload();
             } else {
                 throw new Error(result.message || '削除に失敗しました');
             }

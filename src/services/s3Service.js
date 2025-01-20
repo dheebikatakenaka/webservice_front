@@ -104,6 +104,9 @@ export const updateProduct = async (itemId, fields) => {
 export const deleteProduct = async (title) => {
     try {
         const encodedTitle = encodeURIComponent(title);
+        console.log('Deleting product:', title);
+        console.log('Encoded title:', encodedTitle);
+
         const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodedTitle}`, {
             method: 'DELETE',
             headers: {
@@ -112,7 +115,7 @@ export const deleteProduct = async (title) => {
         });
 
         const result = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(result.message || `HTTP error! status: ${response.status}`);
         }
