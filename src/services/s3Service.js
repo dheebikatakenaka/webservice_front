@@ -93,26 +93,30 @@ export const updateProduct = async (itemId, fields, newImage = null) => {
             }
         };
 
+        console.log('Sending update request:', updateData);
+
         const response = await fetch(`${API_BASE_URL}/api/products/update`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(updateData)
         });
 
-        const result = await response.json();
-        
         if (!response.ok) {
-            throw new Error(result.message || `HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
 
+        const result = await response.json();
         return result;
     } catch (error) {
         console.error('Error updating product:', error);
         throw error;
     }
 };
+
 export const deleteProduct = async (title) => {
     try {
         const encodedTitle = encodeURIComponent(title);

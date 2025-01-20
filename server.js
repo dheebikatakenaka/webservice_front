@@ -10,13 +10,14 @@ const app = express();
 
 // Middleware setup
 app.use(cors({
-    origin: true,  // Allow all origins
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
-app.options('*', cors()); 
+
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({
@@ -240,6 +241,7 @@ app.delete('/api/products/delete/:title', async (req, res) => {
     }
 });
 
+// Edit product endpoint
 app.post('/api/products/update', async (req, res) => {
     try {
         const { itemId, fields } = req.body;
@@ -260,30 +262,28 @@ app.post('/api/products/update', async (req, res) => {
 
         const productIndex = products.findIndex(p => p.Title === itemId);
         if (productIndex === -1) {
-            throw new Error('商品が見つかりません');
+            return res.status(404).json({
+                success: false,
+                message: '商品が見つかりません'
+            });
         }
-
-        // Preserve existing data
-        const existingProduct = products[productIndex];
-        const existingImageKey = existingProduct.画像URL;
 
         // Update product with new fields
         products[productIndex] = {
-            ...existingProduct,
+            ...products[productIndex],
             Title: fields.商品名,
             商品説明: fields.商品説明 || '',
             商品分類: fields.商品分類 || '',
             提供開始日: fields.提供開始日 || '',
             提供終了日: fields.提供終了日 || '',
-            数量: fields.数量 || '',
+            数量: fields.数量?.toString() || '',
             単位: fields.単位 || '',
             提供者の連絡先: {
                 Email: fields.提供者の連絡先 || '',
-                LookupValue: fields.提供者の連絡先 || ''
+                LookupValue: products[productIndex].提供者の連絡先?.LookupValue || ''
             },
             提供元の住所: fields.提供元の住所 || '',
             作業所長名: fields.作業所長名 || '',
-            画像URL: existingImageKey,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
@@ -297,7 +297,7 @@ app.post('/api/products/update', async (req, res) => {
         });
         await s3Client.send(updateCommand);
 
-        res.json({
+        return res.status(200).json({
             success: true,
             message: '更新が完了しました',
             updatedProduct: products[productIndex]
@@ -305,7 +305,7 @@ app.post('/api/products/update', async (req, res) => {
 
     } catch (error) {
         console.error('Update error:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: '更新に失敗しました: ' + error.message
         });
