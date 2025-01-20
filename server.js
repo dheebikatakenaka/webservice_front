@@ -268,7 +268,7 @@ app.post('/api/products/update', async (req, res) => {
         const existingProduct = products[productIndex];
         const existingImageKey = existingProduct.画像URL;
 
-        // Update product with new fields while preserving existing structure
+        // Update product with new fields
         products[productIndex] = {
             ...existingProduct,
             Title: fields.商品名,
@@ -276,14 +276,14 @@ app.post('/api/products/update', async (req, res) => {
             商品分類: fields.商品分類 || '',
             提供開始日: fields.提供開始日 || '',
             提供終了日: fields.提供終了日 || '',
-            数量: fields.数量 ? parseInt(fields.数量, 10) : existingProduct.数量,
-            単位: fields.単位 || '',
+            数量: fields.数量 !== undefined ? fields.数量 : existingProduct.数量,
+            単位: fields.単位 !== undefined ? fields.単位 : existingProduct.単位,
             提供者の連絡先: {
-                Email: fields.提供者の連絡先 || '',
+                Email: fields.提供者の連絡先 || existingProduct.提供者の連絡先?.Email || '',
                 LookupValue: existingProduct.提供者の連絡先?.LookupValue || ''
             },
-            提供元の住所: fields.提供元の住所 || '',
-            作業所長名: fields.作業所長名 || '',
+            提供元の住所: fields.提供元の住所 !== undefined ? fields.提供元の住所 : existingProduct.提供元の住所,
+            作業所長名: fields.作業所長名 !== undefined ? fields.作業所長名 : existingProduct.作業所長名,
             画像URL: existingImageKey,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'

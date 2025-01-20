@@ -149,7 +149,7 @@ const AddProductModal = ({ onClose, onAdd }) => {
     const API_BASE_URL = 'http://172.16.50.168:3000';
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     const [formData, setFormData] = useState({
         商品名: '',
         商品説明: '',
@@ -204,45 +204,15 @@ const AddProductModal = ({ onClose, onAdd }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                const uploadData = new FormData();
-                
-                if (formData.画像) {
-                    uploadData.append('image', formData.画像);
-                }
-    
-                const productData = {
-                    商品名: formData.商品名,
-                    商品説明: formData.商品説明,
-                    商品分類: formData.商品分類,
-                    提供開始日: formData.提供開始日,
-                    提供終了日: formData.提供終了日,
-                    数量: formData.数量,
-                    単位: formData.単位,
-                    提供者の連絡先: formData.提供者の連絡先,
-                    提供元の住所: formData.提供元の住所,
-                    作業所長名: formData.作業所長名
-                };
-    
-                uploadData.append('data', JSON.stringify(productData));
-    
-                const response = await fetch(`${API_BASE_URL}/api/products/create`, {
-                    method: 'POST',
-                    body: uploadData
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-    
-                const result = await response.json();
-                
+                const result = await createProduct(formData);
+
                 if (result.success) {
                     if (previewUrl) {
                         URL.revokeObjectURL(previewUrl);
                     }
                     alert('商品が追加されました');
                     onClose();
-                    handleRedirectAfterAdd();
+                    window.location.reload();
                 } else {
                     throw new Error(result.message || '商品の追加に失敗しました');
                 }
