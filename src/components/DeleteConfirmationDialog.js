@@ -1,6 +1,6 @@
-import React from 'react';
 import styled from 'styled-components';
 import { deleteProduct } from '../services/s3Service';
+import React, { useState, useEffect } from 'react';
 
 const DialogOverlay = styled.div`
     position: fixed;
