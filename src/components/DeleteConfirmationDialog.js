@@ -66,6 +66,7 @@ const DeleteConfirmationDialog = ({ productName, onCancel, onDelete }) => {
             if (result.success) {
                 if (onDelete) {
                     await onDelete();
+                    window.location.href = '/pinterest';
                 }
                 // Close the dialog first
                 onCancel();

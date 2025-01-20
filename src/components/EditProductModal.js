@@ -239,12 +239,13 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                         作業所長名: formData.作業所長名
                     }
                 };
-    
+
                 const result = await updateProduct(product.title, updateData.fields);
-                
+
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
+                    window.location.href = '/pinterest';
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }
@@ -286,19 +287,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                     </FormSection>
 
                     <FormSection>
-                        <FormGroup>
-                            <Label>商品分類</Label>
-                            <InputWrapper>
-                                <Input
-                                    type="text"
-                                    value={formData.商品分類}
-                                    onChange={e => setFormData(prev => ({
-                                        ...prev,
-                                        商品分類: e.target.value
-                                    }))}
-                                />
-                            </InputWrapper>
-                        </FormGroup>
 
                         <FormGroup>
                             <Label>提供開始日</Label>
@@ -320,36 +308,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                                     onChange={e => setFormData(prev => ({ ...prev, 提供終了日: e.target.value }))}
                                 />
                                 {errors.提供終了日 && <ErrorMessage>{errors.提供終了日}</ErrorMessage>}
-                            </InputWrapper>
-                        </FormGroup>
-                    </FormSection>
-
-                    <FormSection>
-                        <FormGroup>
-                            <Label>数量</Label>
-                            <InputWrapper>
-                                <Input
-                                    type="text"
-                                    value={formData.数量}
-                                    onChange={e => setFormData(prev => ({
-                                        ...prev,
-                                        数量: e.target.value
-                                    }))}
-                                />
-                            </InputWrapper>
-                        </FormGroup>
-
-                        <FormGroup>
-                            <Label>単位</Label>
-                            <InputWrapper>
-                                <Input
-                                    type="text"
-                                    value={formData.単位}
-                                    onChange={e => setFormData(prev => ({
-                                        ...prev,
-                                        単位: e.target.value
-                                    }))}
-                                />
                             </InputWrapper>
                         </FormGroup>
                     </FormSection>
