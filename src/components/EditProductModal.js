@@ -224,50 +224,24 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                const formData = new FormData();
-
-                // Add image if it exists
-                if (formData.newImage) {
-                    formData.append('image', formData.newImage);
-                }
-
                 const updateData = {
-                    itemId: product.title,
+                    itemId: product.title,  // Use original title as key
                     fields: {
-                        商品名: product.title, // Keep original title
+                        商品名: product.title,  // Keep original title
                         商品説明: formData.商品説明,
-                        商品分類: formData.商品分類, // Include category
+                        商品分類: formData.商品分類,
                         提供開始日: formData.提供開始日,
                         提供終了日: formData.提供終了日,
-                        数量: formData.数量, // Include quantity
-                        単位: formData.単位, // Include unit
+                        数量: formData.数量?.toString(),
+                        単位: formData.単位,
                         提供者の連絡先: formData.提供者の連絡先,
                         提供元の住所: formData.提供元の住所,
                         作業所長名: formData.作業所長名
                     }
                 };
-
-                let response;
-                if (formData.newImage) {
-                    // If there's a new image, send as FormData
-                    formData.append('data', JSON.stringify(updateData));
-                    response = await fetch(`${API_BASE_URL}/api/products/update`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                } else {
-                    // If no new image, send as JSON
-                    response = await fetch(`${API_BASE_URL}/api/products/update`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(updateData)
-                    });
-                }
-
-                const result = await response.json();
-
+    
+                const result = await updateProduct(updateData.itemId, updateData.fields);
+                
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
