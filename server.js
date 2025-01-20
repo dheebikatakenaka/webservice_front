@@ -10,14 +10,15 @@ const app = express();
 
 // Middleware setup
 app.use(cors({
-    origin: true,
+    origin: ['http://172.16.50.168:3000', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
+    credentials: true
 }));
 
-app.options('*', cors());
+// Add specific OPTIONS handling
+app.options('/api/products/update', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({

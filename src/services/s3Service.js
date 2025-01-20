@@ -77,73 +77,46 @@ export const createProduct = async (formData) => {
 
 export const updateProduct = async (itemId, fields, newImage = null) => {
     try {
-        console.log('Sending update request:', { itemId, fields });
-
-        // If there's a new image, use FormData
+        const url = `${API_BASE_URL}/api/products/update`;
+        
+        let requestOptions;
         if (newImage) {
             const formData = new FormData();
             formData.append('image', newImage);
-            formData.append('data', JSON.stringify({
-                itemId,
-                fields: {
-                    商品名: fields.商品名,
-                    商品説明: fields.商品説明 || '',
-                    商品分類: fields.商品分類 || '',
-                    提供開始日: fields.提供開始日 || '',
-                    提供終了日: fields.提供終了日 || '',
-                    数量: fields.数量?.toString() || '',
-                    単位: fields.単位 || '',
-                    提供者の連絡先: fields.提供者の連絡先 || '',
-                    提供元の住所: fields.提供元の住所 || '',
-                    作業所長名: fields.作業所長名 || ''
-                }
-            }));
-
-            const response = await fetch(`${API_BASE_URL}/api/products/update`, {
+            formData.append('data', JSON.stringify({ itemId, fields }));
+            
+            requestOptions = {
                 method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || `HTTP error! status: ${response.status}`);
-            }
-
-            return result;
+                body: formData,
+                credentials: 'include'
+            };
         } else {
-            // If no new image, send JSON data only
-            const response = await fetch(`${API_BASE_URL}/api/products/update`, {
+            requestOptions = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
                 },
-                body: JSON.stringify({
-                    itemId,
-                    fields: {
-                        商品名: fields.商品名,
-                        商品説明: fields.商品説明 || '',
-                        商品分類: fields.商品分類 || '',
-                        提供開始日: fields.提供開始日 || '',
-                        提供終了日: fields.提供終了日 || '',
-                        数量: fields.数量?.toString() || '',
-                        単位: fields.単位 || '',
-                        提供者の連絡先: fields.提供者の連絡先 || '',
-                        提供元の住所: fields.提供元の住所 || '',
-                        作業所長名: fields.作業所長名 || ''
-                    }
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || `HTTP error! status: ${response.status}`);
-            }
-
-            return result;
+                credentials: 'include',
+                body: JSON.stringify({ itemId, fields })
+            };
         }
+
+        console.log('Sending request to:', url);
+        console.log('Request options:', requestOptions);
+
+        const response = await fetch(url, requestOptions);
+
+        if (response.status === 204) {
+            return { success: true, message: '更新が完了しました' };
+        }
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        }
+
+        return result;
     } catch (error) {
         console.error('Error updating product:', error);
         throw error;
