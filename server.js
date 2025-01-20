@@ -269,31 +269,63 @@ app.post('/api/products/update', async (req, res) => {
             });
         }
 
+        // Handle image update if provided
+        let imageUrl = products[productIndex].画像URL;
+        if (req.files && req.files.image) {
+            const imageFile = req.files.image;
+            const newImageKey = `${itemId}-${Date.now()}${path.extname(imageFile.name)}`;
+            
+            // Upload new image
+            await s3.putObject({
+                Bucket: 'my-lists-images',
+                Key: newImageKey,
+                Body: imageFile.data,
+                ContentType: imageFile.mimetype
+            }).promise();
+
+            // Update image URL
+            imageUrl = `https://my-lists-images.s3.ap-northeast-1.amazonaws.com/${newImageKey}`;
+
+            // Delete old image if exists
+            if (products[productIndex].画像URL) {
+                const oldImageKey = products[productIndex].画像URL.split('/').pop();
+                try {
+                    await s3.deleteObject({
+                        Bucket: 'my-lists-images',
+                        Key: oldImageKey
+                    }).promise();
+                } catch (error) {
+                    console.error('Error deleting old image:', error);
+                }
+            }
+        }
+
         // Update product with new fields
         const updatedProduct = {
             ...products[productIndex],
-            Title: itemId, // Keep original title
+            Title: itemId,
             商品説明: fields.商品説明,
-            商品分類: fields.商品分類,
+            商品分類: fields.商品分類 || '',  // Ensure this field is updated
             提供開始日: fields.提供開始日,
             提供終了日: fields.提供終了日,
-            数量: fields.数量,
-            単位: fields.単位,
-            提供者の連絡先: fields.提供者の連絡先 ? {
-                Email: fields.提供者の連絡先,
-                LookupValue: fields.提供者の連絡先
-            } : products[productIndex].提供者の連絡先,
+            数量: fields.数量?.toString() || '',  // Ensure quantity is updated
+            単位: fields.単位 || '',  // Ensure unit is updated
+            提供者の連絡先: {
+                Email: fields.提供者の連絡先 || '',
+                LookupValue: products[productIndex].提供者の連絡先?.LookupValue || ''
+            },
             提供元の住所: fields.提供元の住所,
             作業所長名: fields.作業所長名,
+            画像URL: imageUrl,  // Update image URL if changed
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
 
-        // Log the update
-        console.log('Original product:', products[productIndex]);
-        console.log('Updated product:', updatedProduct);
+        // Log before and after for debugging
+        console.log('Before update:', products[productIndex]);
+        console.log('After update:', updatedProduct);
 
-        // Replace the old product with updated one
+        // Replace old product with updated one
         products[productIndex] = updatedProduct;
 
         // Save to S3

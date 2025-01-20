@@ -244,7 +244,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    window.location.href = '/products';
+                    window.location.href = '/pinterest';
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }
