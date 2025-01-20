@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createProduct } from '../services/s3Service';
 import api from '../api/config';
 
@@ -123,6 +124,11 @@ const Button = styled.button`
     background-color: #efefef;
     color: black;
   `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const ErrorMessage = styled.div`
@@ -141,6 +147,9 @@ const ImagePreview = styled.div`
 
 const AddProductModal = ({ onClose, onAdd }) => {
     const API_BASE_URL = 'http://172.16.50.168:3000';
+    const navigate = useNavigate();
+    const location = useLocation();
+    
     const [formData, setFormData] = useState({
         商品名: '',
         商品説明: '',
@@ -158,6 +167,17 @@ const AddProductModal = ({ onClose, onAdd }) => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleRedirectAfterAdd = () => {
+        const currentPath = location.pathname;
+        if (currentPath === '/') {
+            navigate('/', { replace: true });
+        } else if (currentPath.includes('/product/')) {
+            navigate(currentPath, { replace: true });
+        } else {
+            navigate('/products', { replace: true });
+        }
+    };
     
     const validateForm = () => {
         const newErrors = {};
@@ -223,8 +243,11 @@ const AddProductModal = ({ onClose, onAdd }) => {
                         URL.revokeObjectURL(previewUrl);
                     }
                     alert('商品が追加されました');
-                    onAdd(result.product);
+                    if (onAdd) {
+                        await onAdd(result.product);
+                    }
                     onClose();
+                    handleRedirectAfterAdd();
                 } else {
                     throw new Error(result.message || '商品の追加に失敗しました');
                 }
@@ -380,8 +403,12 @@ const AddProductModal = ({ onClose, onAdd }) => {
                     </FormSection>
 
                     <ButtonGroup>
-                        <Button type="button" onClick={onClose}>キャンセル</Button>
-                        <Button type="submit" primary>追加</Button>
+                        <Button type="button" onClick={onClose} disabled={isSubmitting}>
+                            キャンセル
+                        </Button>
+                        <Button type="submit" primary disabled={isSubmitting}>
+                            {isSubmitting ? '追加中...' : '追加'}
+                        </Button>
                     </ButtonGroup>
                 </Form>
             </ModalContent>
