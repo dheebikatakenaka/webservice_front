@@ -75,33 +75,18 @@ export const createProduct = async (formData) => {
     }
 };
 
-export const updateProduct = async (itemId, fields, newImage = null) => {
+export const updateProduct = async (itemId, fields) => {
     try {
-        console.log('Sending update request:', { itemId, fields });
-
-        let response;
-
-        if (newImage) {
-            // If there's a new image, use FormData
-            const formData = new FormData();
-            formData.append('image', newImage);
-            formData.append('data', JSON.stringify({ itemId, fields }));
-
-            response = await fetch(`${API_BASE_URL}/api/products/update`, {
-                method: 'POST',
-                body: formData
-            });
-        } else {
-            // If no new image, send JSON data
-            response = await fetch(`${API_BASE_URL}/api/products/update`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ itemId, fields })
-            });
-        }
+        const response = await fetch(`${API_BASE_URL}/api/products/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                itemId,
+                fields
+            })
+        });
 
         const result = await response.json();
 

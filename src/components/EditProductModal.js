@@ -225,9 +225,9 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
             setIsSubmitting(true);
             try {
                 const updateData = {
-                    itemId: product.title,  // Use original title as key
+                    itemId: product.title,
                     fields: {
-                        商品名: product.title,  // Keep original title
+                        商品名: product.title, // Keep original title
                         商品説明: formData.商品説明,
                         商品分類: formData.商品分類,
                         提供開始日: formData.提供開始日,
@@ -240,12 +240,12 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                     }
                 };
     
-                const result = await updateProduct(updateData.itemId, updateData.fields);
+                const result = await updateProduct(product.title, updateData.fields);
                 
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    window.location.href = '/products';
+                    window.location.reload();
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }
@@ -257,7 +257,6 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
             }
         }
     };
-
     return (
         <ModalOverlay onClick={onClose}>
             <ModalContent onClick={e => e.stopPropagation()}>
