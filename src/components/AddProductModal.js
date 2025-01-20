@@ -225,7 +225,6 @@ const AddProductModal = ({ onClose, onAdd }) => {
                     alert('商品が追加されました');
                     onAdd(result.product);
                     onClose();
-                    window.location.href = '/pinterest';
                 } else {
                     throw new Error(result.message || '商品の追加に失敗しました');
                 }

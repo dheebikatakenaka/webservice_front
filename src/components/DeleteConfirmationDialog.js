@@ -74,7 +74,6 @@ const DeleteConfirmationDialog = ({ productId, productName, onCancel, onDelete }
             
             if (result.success) {
                 onDelete();
-                window.location.reload(); // Add this line to refresh the page
             } else {
                 throw new Error(result.message || '削除に失敗しました');
             }

@@ -14,8 +14,6 @@ function App() {
   const handleProductAdd = (data) => {
     console.log('New product:', data);
     setShowAddModal(false);
-    // Use window.location.href to maintain the /pinterest path
-    window.location.href = '/pinterest/products';
   };
 
   return (
