@@ -171,24 +171,22 @@ const AddProductModal = ({ onClose, onAdd }) => {
     const handleRedirectAfterAdd = () => {
         const currentPath = location.pathname;
         if (currentPath === '/') {
-            navigate('/', { replace: true });
+            window.location.href = '/';
         } else if (currentPath.includes('/product/')) {
-            navigate(currentPath, { replace: true });
+            window.location.href = '/products';
         } else {
-            navigate('/products', { replace: true });
+            window.location.href = '/products';
         }
     };
-    
+
     const validateForm = () => {
         const newErrors = {};
-
         if (!formData.商品名.trim()) {
             newErrors.商品名 = '商品名は必須です';
         }
         if (!formData.画像) {
             newErrors.画像 = '商品画像は必須です';
         }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -243,9 +241,6 @@ const AddProductModal = ({ onClose, onAdd }) => {
                         URL.revokeObjectURL(previewUrl);
                     }
                     alert('商品が追加されました');
-                    if (onAdd) {
-                        await onAdd(result.product);
-                    }
                     onClose();
                     handleRedirectAfterAdd();
                 } else {
