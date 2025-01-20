@@ -77,35 +77,61 @@ export const createProduct = async (formData) => {
 
 export const updateProduct = async (itemId, fields, newImage = null) => {
     try {
-        const updateData = new FormData();
+        let response;
 
         if (newImage) {
+            // If there's a new image, use FormData
+            const updateData = new FormData();
             updateData.append('image', newImage);
+            
+            const productData = {
+                itemId,
+                fields: {
+                    商品名: fields.商品名,
+                    商品説明: fields.商品説明 || '',
+                    商品分類: fields.商品分類 || '',
+                    提供開始日: fields.提供開始日 || '',
+                    提供終了日: fields.提供終了日 || '',
+                    数量: fields.数量?.toString() || '',  // Convert to string
+                    単位: fields.単位 || '',
+                    提供者の連絡先: fields.提供者の連絡先 || '',
+                    提供元の住所: fields.提供元の住所 || '',
+                    作業所長名: fields.作業所長名 || ''
+                }
+            };
+
+            updateData.append('data', JSON.stringify(productData));
+
+            response = await fetch(`${API_BASE_URL}/api/products/update`, {
+                method: 'POST',
+                body: updateData  // Don't set Content-Type header when sending FormData
+            });
+        } else {
+            // If no new image, send JSON directly
+            const productData = {
+                itemId,
+                fields: {
+                    商品名: fields.商品名,
+                    商品説明: fields.商品説明 || '',
+                    商品分類: fields.商品分類 || '',
+                    提供開始日: fields.提供開始日 || '',
+                    提供終了日: fields.提供終了日 || '',
+                    数量: fields.数量?.toString() || '',  // Convert to string
+                    単位: fields.単位 || '',
+                    提供者の連絡先: fields.提供者の連絡先 || '',
+                    提供元の住所: fields.提供元の住所 || '',
+                    作業所長名: fields.作業所長名 || ''
+                }
+            };
+
+            response = await fetch(`${API_BASE_URL}/api/products/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(productData)
+            });
         }
-
-        const productData = {
-            itemId,
-            fields: {
-                商品名: fields.商品名,
-                商品説明: fields.商品説明 || '',
-                商品分類: fields.商品分類 || '',
-                提供開始日: fields.提供開始日 || '',
-                提供終了日: fields.提供終了日 || '',
-                数量: fields.数量 || '',
-                単位: fields.単位 || '',
-                提供者の連絡先: fields.提供者の連絡先 || '',
-                提供元の住所: fields.提供元の住所 || '',
-                作業所長名: fields.作業所長名 || ''
-            }
-        };
-
-        const response = await fetch(`${API_BASE_URL}/api/products/update`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(productData)
-        });
 
         const result = await response.json();
         

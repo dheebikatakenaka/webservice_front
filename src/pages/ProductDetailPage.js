@@ -146,8 +146,7 @@ const ProductDetailPage = () => {
       setShowEditModal(false);
       setShowUpdateCompletion(true);
       console.log('Updated product:', updatedProduct);
-      // Optional: Refresh data after update
-      // await fetchUpdatedData();
+      window.location.reload();
     } catch (error) {
       console.error('Update error:', error);
       setError('更新に失敗しました');
@@ -227,7 +226,14 @@ const ProductDetailPage = () => {
           <InfoItem>
             <InfoLabel>数量</InfoLabel>
             <InfoValue>
-              {state.quantity ? `${state.quantity}${state.unit || ''}` : '未設定'}
+              {state.quantity ? `${state.quantity}` : '未設定'}
+            </InfoValue>
+          </InfoItem>
+
+          <InfoItem>
+            <InfoLabel>単位</InfoLabel>
+            <InfoValue>
+              {state.unit ? `${state.unit}` : '未設定'}
             </InfoValue>
           </InfoItem>
 

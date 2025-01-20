@@ -222,13 +222,27 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                const result = await updateProduct(product.title, formData, formData.newImage);
+                const updateData = {
+                    itemId: product.title,
+                    fields: {
+                        商品名: formData.商品名,
+                        商品説明: formData.商品説明,
+                        商品分類: formData.商品分類,
+                        提供開始日: formData.提供開始日,
+                        提供終了日: formData.提供終了日,
+                        数量: formData.数量.toString(), // Convert to string
+                        単位: formData.単位,
+                        提供者の連絡先: formData.提供者の連絡先,
+                        提供元の住所: formData.提供元の住所,
+                        作業所長名: formData.作業所長名
+                    }
+                };
+    
+                const result = await updateProduct(product.title, updateData.fields);
     
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    
-                    // Force a hard refresh to ensure fresh data
                     window.location.reload();
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
@@ -241,6 +255,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
             }
         }
     };
+    
     return (
         <ModalOverlay onClick={onClose}>
             <ModalContent onClick={e => e.stopPropagation()}>

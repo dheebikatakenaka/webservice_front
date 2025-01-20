@@ -240,7 +240,6 @@ app.delete('/api/products/delete/:title', async (req, res) => {
     }
 });
 
-// Update product endpoint
 app.post('/api/products/update', async (req, res) => {
     try {
         const { itemId, fields } = req.body;
@@ -276,20 +275,18 @@ app.post('/api/products/update', async (req, res) => {
             商品分類: fields.商品分類 || '',
             提供開始日: fields.提供開始日 || '',
             提供終了日: fields.提供終了日 || '',
-            数量: fields.数量 !== undefined ? fields.数量 : existingProduct.数量,
-            単位: fields.単位 !== undefined ? fields.単位 : existingProduct.単位,
+            数量: fields.数量 || '',
+            単位: fields.単位 || '',
             提供者の連絡先: {
-                Email: fields.提供者の連絡先 || existingProduct.提供者の連絡先?.Email || '',
-                LookupValue: existingProduct.提供者の連絡先?.LookupValue || ''
+                Email: fields.提供者の連絡先 || '',
+                LookupValue: fields.提供者の連絡先 || ''
             },
-            提供元の住所: fields.提供元の住所 !== undefined ? fields.提供元の住所 : existingProduct.提供元の住所,
-            作業所長名: fields.作業所長名 !== undefined ? fields.作業所長名 : existingProduct.作業所長名,
+            提供元の住所: fields.提供元の住所 || '',
+            作業所長名: fields.作業所長名 || '',
             画像URL: existingImageKey,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
-
-        console.log('Updated product:', products[productIndex]);
 
         // Save updated products.json
         const updateCommand = new PutObjectCommand({
@@ -300,18 +297,10 @@ app.post('/api/products/update', async (req, res) => {
         });
         await s3Client.send(updateCommand);
 
-        // Generate presigned URL for response
-        const signedUrl = existingImageKey ? await generatePresignedUrl(existingImageKey) : '';
-        const responseProduct = {
-            ...products[productIndex],
-            画像URL: signedUrl
-        };
-
-        console.log('Update successful');
         res.json({
             success: true,
             message: '更新が完了しました',
-            updatedProduct: responseProduct
+            updatedProduct: products[productIndex]
         });
 
     } catch (error) {
