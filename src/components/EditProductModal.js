@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { updateProduct } from '../services/s3Service'; 
+import { updateProduct } from '../services/s3Service';
 import api from '../api/config';
 
 const ModalOverlay = styled.div`
@@ -180,17 +180,18 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imagePreview, setImagePreview] = useState('');
 
+    // In EditProductModal.js, add these logs
     useEffect(() => {
         if (product) {
-            console.log('Setting form data:', product); // Debug log
+            console.log('Setting initial form data:', product);
             setFormData({
                 商品名: product.title || '',
                 商品説明: product.description || '',
-                商品分類: product.category || '',
+                商品分類: product.category || '',    // Make sure this is set
                 提供開始日: formatDateForInput(product.startDate) || '',
                 提供終了日: formatDateForInput(product.endDate) || '',
-                数量: product.quantity?.toString() || '',  // Convert to string
-                単位: product.unit || '',
+                数量: product.quantity || '',        // Make sure this is set
+                単位: product.unit || '',            // Make sure this is set
                 提供者の連絡先: product.contactInfo || '',
                 提供元の住所: product.address || '',
                 作業所長名: product.managerName || '',
@@ -223,28 +224,48 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
+                // Create FormData
+                const formData = new FormData();
+
+                // Add image if exists
+                if (formData.newImage) {
+                    formData.append('image', formData.newImage);
+                }
+
+                // Create update data
                 const updateData = {
-                    itemId: product.title,  // Use original title as key
+                    itemId: product.title,
                     fields: {
-                        商品名: product.title,  // Keep original title
+                        商品名: product.title, // Keep original title
                         商品説明: formData.商品説明,
-                        商品分類: formData.商品分類,
+                        商品分類: formData.商品分類,  // Make sure this is included
                         提供開始日: formData.提供開始日,
                         提供終了日: formData.提供終了日,
-                        数量: formData.数量?.toString(),
-                        単位: formData.単位,
+                        数量: formData.数量,          // Make sure this is included
+                        単位: formData.単位,          // Make sure this is included
                         提供者の連絡先: formData.提供者の連絡先,
                         提供元の住所: formData.提供元の住所,
                         作業所長名: formData.作業所長名
                     }
                 };
-    
-                const result = await updateProduct(updateData.itemId, updateData.fields);
-                
+
+                console.log('Sending update data:', updateData); // Debug log
+
+                const response = await fetch(`${API_BASE_URL}/api/products/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+                console.log('Update result:', result); // Debug log
+
                 if (result.success) {
                     alert('更新が完了しました');
                     onClose();
-                    window.location.href = '/pinterest';
+                    window.location.href = '/products';
                 } else {
                     throw new Error(result.message || '更新に失敗しました');
                 }
@@ -269,7 +290,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                                     type="text"
                                     value={formData.商品名}
                                     disabled={true}  // Make title non-editable
-                                    readOnly={true} 
+                                    readOnly={true}
                                 />
                                 {errors.商品名 && <ErrorMessage>{errors.商品名}</ErrorMessage>}
                             </InputWrapper>
@@ -293,7 +314,10 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                                 <Input
                                     type="text"
                                     value={formData.商品分類}
-                                    onChange={e => setFormData(prev => ({ ...prev, 商品分類: e.target.value }))}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        商品分類: e.target.value
+                                    }))}
                                 />
                             </InputWrapper>
                         </FormGroup>
@@ -327,11 +351,11 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                             <Label>数量</Label>
                             <InputWrapper>
                                 <Input
-                                    type="number"
+                                    type="text"
                                     value={formData.数量}
                                     onChange={e => setFormData(prev => ({
                                         ...prev,
-                                        数量: e.target.value ? parseInt(e.target.value, 10) : ''
+                                        数量: e.target.value
                                     }))}
                                 />
                             </InputWrapper>
@@ -343,7 +367,10 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                                 <Input
                                     type="text"
                                     value={formData.単位}
-                                    onChange={e => setFormData(prev => ({ ...prev, 単位: e.target.value }))}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        単位: e.target.value
+                                    }))}
                                 />
                             </InputWrapper>
                         </FormGroup>
