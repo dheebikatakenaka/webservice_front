@@ -17,7 +17,7 @@ function Home() {
   return (
     <HomeContainer>
       <WelcomeText>商品を見つけよう</WelcomeText>
-      <PinGrid limit={6} showAll={false} />
+      <PinGrid limit={10} showAll={false} />
     </HomeContainer>
   );
 }
