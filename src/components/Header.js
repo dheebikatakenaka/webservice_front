@@ -20,7 +20,7 @@ const HeaderContainer = styled.header`
 `;
 
 const Logo = styled(Link)`
-  color: #E60023;
+  color: #0A8F96;
   font-weight: bold;
   font-size: 20px;
   text-decoration: none;
@@ -76,7 +76,7 @@ const SearchInput = styled.input`
   font-size: 16px;
   
   &:focus {
-    border-color: #E60023;
+    border-color: #0A8F96;
     background-color: white;
     outline: none;
   }
@@ -153,7 +153,7 @@ const Right = styled.div`
 `;
 
 const AddButton = styled.button`
-  background-color: #E60023;
+  background-color: #0A8F96;
   color: white;
   padding: 8px 16px;
   border-radius: 24px;

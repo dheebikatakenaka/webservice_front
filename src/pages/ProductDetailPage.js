@@ -63,7 +63,7 @@ const IconsContainer = styled.div`
 `;
 
 const IconButton = styled.button`
-  background: ${props => props.delete ? '#E60023' : '#000000'};
+  background: ${props => props.delete ? '#0A8F96' : '#000000'};
   color: white;
   border: none;
   border-radius: 50%;

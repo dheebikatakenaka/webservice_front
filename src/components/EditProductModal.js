@@ -55,7 +55,7 @@ const Label = styled.label`
   
   &::after {
     content: " ${props => props.required ? '*' : ''}";
-    color: #E60023;
+    color: #0A8F96;
   }
 `;
 
@@ -72,7 +72,7 @@ const Input = styled.input`
   font-size: 16px;
   
   &:focus {
-    border-color: #E60023;
+    border-color: #0A8F96;
     outline: none;
   }
 `;
@@ -86,7 +86,7 @@ const TextArea = styled.textarea`
   resize: vertical;
   
   &:focus {
-    border-color: #E60023;
+    border-color: #0A8F96;
     outline: none;
   }
 `;
@@ -106,7 +106,7 @@ const Button = styled.button`
   cursor: pointer;
   
   ${props => props.primary ? `
-    background-color: #E60023;
+    background-color: #0A8F96;
     color: white;
   ` : `
     background-color: #efefef;
@@ -120,7 +120,7 @@ const Button = styled.button`
 `;
 
 const ErrorMessage = styled.div`
-  color: #E60023;
+  color: #0A8F96;
   font-size: 12px;
   margin-top: 4px;
 `;

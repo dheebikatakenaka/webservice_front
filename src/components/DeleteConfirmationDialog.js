@@ -47,7 +47,7 @@ const Button = styled.button`
     cursor: pointer;
     
     ${props => props.delete ? `
-        background-color: #E60023;
+        background-color: #0A8F96;
         color: white;
     ` : `
         background-color: #efefef;

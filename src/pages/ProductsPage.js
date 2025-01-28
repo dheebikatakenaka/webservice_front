@@ -29,7 +29,7 @@ const LoadingMessage = styled.div`
 `;
 
 const ErrorMessage = styled.div`
-  color: #E60023;
+  color: #0A8F96;
   text-align: center;
   padding: 20px;
   margin: 20px auto;
@@ -126,7 +126,7 @@ const CloseButton = styled.button`
   color: #666;
   
   &:hover {
-      color: #E60023;
+      color: #0A8F96;
   }
 `;
 
