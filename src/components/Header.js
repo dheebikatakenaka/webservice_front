@@ -166,7 +166,7 @@ const AddButton = styled.button`
   gap: 4px;
   
   &:hover {
-    background-color: #ad081b;
+    background-color: #0A8F96;
   }
 
   svg {
