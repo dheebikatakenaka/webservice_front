@@ -6,7 +6,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import AddProductModal from './components/AddProductModal';
 import { ROUTES, APP_BASE_URL } from './utils/constants';
-
+import './App.css';
 function App() {
   const [showAddModal, setShowAddModal] = useState(false);
 
