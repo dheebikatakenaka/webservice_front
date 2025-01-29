@@ -25,6 +25,15 @@ const HeaderContainer = styled.header`
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     height: 70px;
   }
+
+  @media (max-width: 1024px) {
+    padding: 10px 20px;
+  }
+
+  @media (max-width: 768px) {
+    height: 80px;
+    padding: 10px 15px;
+  }
 `;
 
 const Logo = styled(Link)`
@@ -42,19 +51,24 @@ const Logo = styled(Link)`
     transition: all 0.3s ease;
   }
 
-  .scrolled & img {
-    height: 70px; // Changed from 50px to 70px
+  header.scrolled ~ & img {
+    height: 70px;
+  }
+
+  @media (max-width: 1024px) {
+    left: 20px;
   }
 
   @media (max-width: 768px) {
-    left: 20px;
+    top: 5px;
+    left: 15px;
 
     img {
       height: 80px;
     }
 
-    .scrolled & img {
-      height: 70px;
+    header.scrolled ~ & img {
+      height: 60px;
     }
   }
 `;
@@ -65,33 +79,13 @@ const Nav = styled.div`
   gap: 24px;
   margin-left: auto;
   width: fit-content;
-`;
 
-const StyledLink = styled(Link)`
-  color: black;
-  text-decoration: none;
-  font-weight: ${props => props.$active ? '600' : 'normal'};
-  font-size: 16px;
-  white-space: nowrap;
-  
-  &:hover {
-    text-decoration: underline;
+  @media (max-width: 1024px) {
+    gap: 16px;
   }
-`;
 
-const ItemsButton = styled(Link)`
-  background-color: #000000;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 24px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 16px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  
-  &:hover {
-    background-color: #333333;
+  @media (max-width: 768px) {
+    gap: 12px;
   }
 `;
 
@@ -100,6 +94,16 @@ const SearchContainer = styled.div`
   margin: 0 24px;
   position: relative;
   flex-shrink: 0;
+
+  @media (max-width: 1024px) {
+    width: 250px;
+    margin: 0 16px;
+  }
+
+  @media (max-width: 768px) {
+    width: 200px;
+    margin: 0 12px;
+  }
 `;
 
 const SearchInput = styled.input`
@@ -119,6 +123,82 @@ const SearchInput = styled.input`
   &::placeholder {
     color: #666;
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 40px;
+    font-size: 14px;
+  }
+`;
+
+const AddButton = styled.button`
+  background-color: #0A8F96;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: none;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  
+  &:hover {
+    background-color: #0A8F96;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 6px 12px;
+    font-size: 14px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+`;
+
+const ItemsButton = styled(Link)`
+  background-color: #000000;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 24px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  
+  &:hover {
+    background-color: #333333;
+  }
+
+  @media (max-width: 768px) {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+`;
+const StyledLink = styled(Link)`
+  color: black;
+  text-decoration: none;
+  font-weight: ${props => props.$active ? '600' : 'normal'};
+  font-size: 16px;
+  white-space: nowrap;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
 `;
 
 const StyledSearchIcon = styled(MdSearch)`
@@ -129,6 +209,12 @@ const StyledSearchIcon = styled(MdSearch)`
   color: #666;
   width: 20px;
   height: 20px;
+
+  @media (max-width: 768px) {
+    width: 16px;
+    height: 16px;
+    left: 12px;
+  }
 `;
 
 const SearchResults = styled.div`
@@ -156,6 +242,11 @@ const SearchResultItem = styled.div`
   &:hover {
     background-color: #f0f0f0;
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    gap: 8px;
+  }
 `;
 
 const ResultImage = styled.img`
@@ -163,6 +254,11 @@ const ResultImage = styled.img`
   height: 40px;
   border-radius: 4px;
   object-fit: cover;
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+  }
 `;
 
 const ResultInfo = styled.div`
@@ -172,36 +268,23 @@ const ResultInfo = styled.div`
 const ResultTitle = styled.div`
   font-weight: 600;
   margin-bottom: 4px;
+  font-size: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
 `;
 
 const NoResults = styled.div`
   padding: 16px;
   text-align: center;
   color: #666;
-`;
+  font-size: 14px;
 
-const AddButton = styled.button`
-  background-color: #0A8F96;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 24px;
-  border: none;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  
-  &:hover {
-    background-color: #0A8F96;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
+  @media (max-width: 768px) {
+    padding: 12px;
+    font-size: 13px;
   }
 `;
 
