@@ -4,35 +4,67 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MdAdd, MdSearch } from 'react-icons/md';
 import { getImagesFromS3 } from '../services/s3Service';
 import api from '../api/config';
+import logoImage from '../images/button.png';
 
 const HeaderContainer = styled.header`
-  height: 56px;
-  padding: 4px 16px;
-  background: white;
+  height: 100px;
+  padding: 10px 40px;
+  background: transparent;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  border-bottom: 1px solid #efefef;
+  z-index: 1000;
+  transition: all 0.3s ease;
+
+  &.scrolled {
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: 70px;
+  }
 `;
 
 const Logo = styled(Link)`
-  color: #0A8F96;
-  font-weight: bold;
-  font-size: 20px;
-  text-decoration: none;
-  padding: 0 16px;
-  min-width: fit-content;
+  position: fixed;
+  top: 10px;
+  left: 40px;
+  margin: 0;
+  z-index: 1001;
+  transition: all 0.3s ease;
+
+  img {
+    height: 125px;
+    width: auto;
+    display: block;
+    transition: all 0.3s ease;
+  }
+
+  .scrolled & img {
+    height: 70px; // Changed from 50px to 70px
+  }
+
+  @media (max-width: 768px) {
+    left: 20px;
+
+    img {
+      height: 80px;
+    }
+
+    .scrolled & img {
+      height: 70px;
+    }
+  }
 `;
 
 const Nav = styled.div`
   display: flex;
   align-items: center;
   gap: 24px;
-  min-width: fit-content;
+  margin-left: auto;
+  width: fit-content;
 `;
 
 const StyledLink = styled(Link)`
@@ -40,6 +72,7 @@ const StyledLink = styled(Link)`
   text-decoration: none;
   font-weight: ${props => props.$active ? '600' : 'normal'};
   font-size: 16px;
+  white-space: nowrap;
   
   &:hover {
     text-decoration: underline;
@@ -54,6 +87,8 @@ const ItemsButton = styled(Link)`
   text-decoration: none;
   font-weight: 600;
   font-size: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
   
   &:hover {
     background-color: #333333;
@@ -61,14 +96,14 @@ const ItemsButton = styled(Link)`
 `;
 
 const SearchContainer = styled.div`
-  flex: 1;
-  margin: 0 16px;
+  width: 300px;
+  margin: 0 24px;
   position: relative;
-  max-width: 800px;
+  flex-shrink: 0;
 `;
 
 const SearchInput = styled.input`
-  width: 100%;
+  width: 75%;
   padding: 12px 48px;
   border-radius: 24px;
   border: 2px solid #efefef;
@@ -145,13 +180,6 @@ const NoResults = styled.div`
   color: #666;
 `;
 
-const Right = styled.div`
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  min-width: fit-content;
-`;
-
 const AddButton = styled.button`
   background-color: #0A8F96;
   color: white;
@@ -164,6 +192,8 @@ const AddButton = styled.button`
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
   
   &:hover {
     background-color: #0A8F96;
@@ -176,6 +206,7 @@ const AddButton = styled.button`
 `;
 
 function Header({ onAddProduct }) {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -184,16 +215,23 @@ function Header({ onAddProduct }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Update useEffect to handle data mapping
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const products = await getImagesFromS3();
-        // Map the products to match the search result structure
         const mappedProducts = products.map(product => ({
           id: product.id,
           title: product.title,
-          url: product.image, // Update to use the correct image URL
+          url: product.image,
           description: product.description
         }));
         setAllProducts(mappedProducts);
@@ -204,7 +242,6 @@ function Header({ onAddProduct }) {
     fetchProducts();
   }, []);
 
-  // Update handleResultClick to use correct path
   const handleResultClick = (product) => {
     navigate(`/product/${product.id}`, { 
       state: { 
@@ -218,7 +255,6 @@ function Header({ onAddProduct }) {
     setSearchQuery('');
   };
 
-  // Update search logic
   const handleSearch = (query) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -239,73 +275,82 @@ function Header({ onAddProduct }) {
     handleSearch(query);
   };
 
-  // Check if current path matches (considering /pinterest basename)
   const isActivePath = (path) => {
     const currentPath = location.pathname.replace('/pinterest', '');
     return currentPath === path;
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <HeaderContainer>
-      <Logo to="/">商品</Logo>
-      <Nav>
-        <StyledLink 
-          to="/" 
-          $active={isActivePath('/')}
-        >
-          ホーム
-        </StyledLink>
-        <ItemsButton to="/products">アイテムを探す</ItemsButton>
-      </Nav>
-      <SearchContainer ref={searchContainerRef}>
-        <StyledSearchIcon />
-        <SearchInput
-          type="text"
-          placeholder="商品を検索"
-          value={searchQuery}
-          onChange={handleInputChange}
-          onFocus={() => {
-            if (searchQuery) setShowResults(true);
-          }}
-        />
-        {showResults && (
-          <SearchResults>
-            {searchResults.length > 0 ? (
-              searchResults.map(product => (
-                <SearchResultItem 
-                  key={product.id}
-                  onClick={() => handleResultClick(product)}
-                >
-                  {product.url && (
-                    <ResultImage 
-                      src={product.url} 
-                      alt={product.title}
-                      onError={(e) => {
-                        console.error('Image load error:', product.url);
-                        e.target.src = '/placeholder.png'; // Add a placeholder image
-                      }}
-                    />
-                  )}
-                  <ResultInfo>
-                    <ResultTitle>{product.title}</ResultTitle>
-                  </ResultInfo>
-                </SearchResultItem>
-              ))
-            ) : (
-              <NoResults>
-                「{searchQuery}」に一致する商品が見つかりませんでした。
-              </NoResults>
+    <>
+      <Logo to="/">
+        <img src={logoImage} alt="Logo" />
+      </Logo>
+      <HeaderContainer className={isScrolled ? 'scrolled' : ''}>
+        <Nav>
+          <StyledLink to="/" $active={isActivePath('/')}>
+            ホーム
+          </StyledLink>
+          <ItemsButton to="/products">アイテムを探す</ItemsButton>
+          <SearchContainer ref={searchContainerRef}>
+            <StyledSearchIcon />
+            <SearchInput
+              type="text"
+              placeholder="商品を検索"
+              value={searchQuery}
+              onChange={handleInputChange}
+              onFocus={() => {
+                if (searchQuery) setShowResults(true);
+              }}
+            />
+            {showResults && (
+              <SearchResults>
+                {searchResults.length > 0 ? (
+                  searchResults.map(product => (
+                    <SearchResultItem 
+                      key={product.id}
+                      onClick={() => handleResultClick(product)}
+                    >
+                      {product.url && (
+                        <ResultImage 
+                          src={product.url} 
+                          alt={product.title}
+                          onError={(e) => {
+                            console.error('Image load error:', product.url);
+                            e.target.src = '/placeholder.png';
+                          }}
+                        />
+                      )}
+                      <ResultInfo>
+                        <ResultTitle>{product.title}</ResultTitle>
+                      </ResultInfo>
+                    </SearchResultItem>
+                  ))
+                ) : (
+                  <NoResults>
+                    「{searchQuery}」に一致する商品が見つかりませんでした。
+                  </NoResults>
+                )}
+              </SearchResults>
             )}
-          </SearchResults>
-        )}
-      </SearchContainer>
-      <Right>
-        <AddButton onClick={onAddProduct}>
-          <MdAdd />
-          商品追加
-        </AddButton>
-      </Right>
-    </HeaderContainer>
+          </SearchContainer>
+          <AddButton onClick={onAddProduct}>
+            <MdAdd />
+            商品追加
+          </AddButton>
+        </Nav>
+      </HeaderContainer>
+    </>
   );
 }
 

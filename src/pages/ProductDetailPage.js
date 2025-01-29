@@ -8,7 +8,7 @@ import UpdateCompletionDialog from '../components/UpdateCompletionDialog';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 const DetailContainer = styled.div`
-  padding: 80px 20px 20px;
+  padding: 145px 20px 20px;
   max-width: 1200px;
   margin: 0 auto;
 `;
@@ -111,12 +111,11 @@ const ProductDetailPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUpdateCompletion, setShowUpdateCompletion] = useState(false);
+  const [error, setError] = useState(null);
+  
   const { state } = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
-
-  // Add error state
-  const [error, setError] = useState(null);
 
   // Redirect if no state
   useEffect(() => {
@@ -170,8 +169,6 @@ const ProductDetailPage = () => {
         const timestamp = parseInt(dateString.replace('/Date(', '').replace(')/', ''));
         return new Date(timestamp).toLocaleDateString('ja-JP');
       }
-
-      // Handle regular date string
       return new Date(dateString).toLocaleDateString('ja-JP');
     } catch (error) {
       console.error('Date parsing error:', error);
@@ -272,14 +269,6 @@ const ProductDetailPage = () => {
         </ZoomedImage>
       )}
 
-      {showDeleteConfirm && (
-        <DeleteConfirmationDialog
-          productName={state.title}
-          onCancel={() => setShowDeleteConfirm(false)}
-          onDelete={handleDeleteConfirm}
-        />
-      )}
-
       {showEditModal && (
         <EditProductModal
           product={{
@@ -303,15 +292,11 @@ const ProductDetailPage = () => {
         />
       )}
 
-
       {showDeleteConfirm && (
         <DeleteConfirmationDialog
           productName={state.title}
           onCancel={() => setShowDeleteConfirm(false)}
-          onDelete={() => {
-            setShowDeleteConfirm(false);
-            navigate('/products');
-          }}
+          onDelete={handleDeleteConfirm}
         />
       )}
 
