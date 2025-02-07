@@ -16,7 +16,7 @@ const WelcomeText = styled.h1`
 function Home() {
   return (
     <HomeContainer>
-      <WelcomeText>商品を見つけよう</WelcomeText>
+      <WelcomeText>建材マッチングプラットフォーム</WelcomeText>
       <PinGrid limit={10} showAll={false} />
     </HomeContainer>
   );
