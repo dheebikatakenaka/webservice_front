@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createProduct } from '../services/s3Service';
 import api from '../api/config';
 
@@ -54,7 +55,7 @@ const Label = styled.label`
   
   &::after {
     content: " ${props => props.required ? '*' : ''}";
-    color: #E60023;
+    color: #0A8F96;
   }
 `;
 
@@ -71,7 +72,7 @@ const Input = styled.input`
   font-size: 16px;
   
   &:focus {
-    border-color: #E60023;
+    border-color: #0A8F96;
     outline: none;
   }
 `;
@@ -85,7 +86,7 @@ const TextArea = styled.textarea`
   resize: vertical;
   
   &:focus {
-    border-color: #E60023;
+    border-color: #0A8F96;
     outline: none;
   }
 `;
@@ -97,7 +98,7 @@ const Select = styled.select`
   font-size: 16px;
   
   &:focus {
-    border-color: #E60023;
+    border-color: #0A8F96;
     outline: none;
   }
 `;
@@ -117,16 +118,21 @@ const Button = styled.button`
   cursor: pointer;
   
   ${props => props.primary ? `
-    background-color: #E60023;
+    background-color: #0A8F96;
     color: white;
   ` : `
     background-color: #efefef;
     color: black;
   `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const ErrorMessage = styled.div`
-  color: #E60023;
+  color: #0A8F96;
   font-size: 12px;
   margin-top: 4px;
 `;
@@ -141,6 +147,9 @@ const ImagePreview = styled.div`
 
 const AddProductModal = ({ onClose, onAdd }) => {
     const API_BASE_URL = 'http://172.16.50.168:3000';
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const [formData, setFormData] = useState({
         商品名: '',
         商品説明: '',
@@ -158,17 +167,15 @@ const AddProductModal = ({ onClose, onAdd }) => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     const validateForm = () => {
         const newErrors = {};
-
         if (!formData.商品名.trim()) {
             newErrors.商品名 = '商品名は必須です';
         }
         if (!formData.画像) {
             newErrors.画像 = '商品画像は必須です';
         }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -186,46 +193,15 @@ const AddProductModal = ({ onClose, onAdd }) => {
         if (validateForm()) {
             setIsSubmitting(true);
             try {
-                const uploadData = new FormData();
-                
-                if (formData.画像) {
-                    uploadData.append('image', formData.画像);
-                }
-    
-                const productData = {
-                    商品名: formData.商品名,
-                    商品説明: formData.商品説明,
-                    商品分類: formData.商品分類,
-                    提供開始日: formData.提供開始日,
-                    提供終了日: formData.提供終了日,
-                    数量: formData.数量,
-                    単位: formData.単位,
-                    提供者の連絡先: formData.提供者の連絡先,
-                    提供元の住所: formData.提供元の住所,
-                    作業所長名: formData.作業所長名
-                };
-    
-                uploadData.append('data', JSON.stringify(productData));
-    
-                const response = await fetch(`${API_BASE_URL}/api/products/create`, {
-                    method: 'POST',
-                    body: uploadData
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-    
-                const result = await response.json();
-                
+                const result = await createProduct(formData);
+
                 if (result.success) {
                     if (previewUrl) {
                         URL.revokeObjectURL(previewUrl);
                     }
                     alert('商品が追加されました');
-                    onAdd(result.product);
                     onClose();
-                    window.location.href = '/pinterest';
+                    window.location.reload();
                 } else {
                     throw new Error(result.message || '商品の追加に失敗しました');
                 }
@@ -381,8 +357,12 @@ const AddProductModal = ({ onClose, onAdd }) => {
                     </FormSection>
 
                     <ButtonGroup>
-                        <Button type="button" onClick={onClose}>キャンセル</Button>
-                        <Button type="submit" primary>追加</Button>
+                        <Button type="button" onClick={onClose} disabled={isSubmitting}>
+                            キャンセル
+                        </Button>
+                        <Button type="submit" primary disabled={isSubmitting}>
+                            {isSubmitting ? '追加中...' : '追加'}
+                        </Button>
                     </ButtonGroup>
                 </Form>
             </ModalContent>

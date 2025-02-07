@@ -10,13 +10,15 @@ const app = express();
 
 // Middleware setup
 app.use(cors({
-    origin: true,  // Allow all origins
+    origin: ['http://172.16.50.168:3000', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
+    credentials: true
 }));
-app.options('*', cors()); 
+
+// Add specific OPTIONS handling
+app.options('/api/products/update', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({
@@ -240,34 +242,32 @@ app.delete('/api/products/delete/:title', async (req, res) => {
     }
 });
 
-// Update product endpoint
+// Edit product endpoint
 app.post('/api/products/update', async (req, res) => {
     try {
         const { itemId, fields } = req.body;
 
-        const getCommand = new GetObjectCommand({
+        // Get current products.json
+        const data = await s3.getObject({
             Bucket: 'my-lists-images',
             Key: 'products.json'
-        });
-        const response = await s3Client.send(getCommand);
-        const data = await response.Body.transformToString();
+        }).promise();
 
-        let products = JSON.parse(data.replace(/^\uFEFF/, ''));
+        let products = JSON.parse(data.Body.toString('utf-8').replace(/^\uFEFF/, ''));
         if (!Array.isArray(products)) {
             products = [products];
         }
 
+        // Find product to update
         const productIndex = products.findIndex(p => p.Title === itemId);
         if (productIndex === -1) {
             throw new Error('商品が見つかりません');
         }
 
-        // Preserve the existing image key
-        const existingImageKey = products[productIndex].画像URL;
-
+        // Update product
         products[productIndex] = {
             ...products[productIndex],
-            Title: fields.商品名,
+            Title: itemId,
             商品説明: fields.商品説明,
             提供開始日: fields.提供開始日,
             提供終了日: fields.提供終了日,
@@ -277,30 +277,22 @@ app.post('/api/products/update', async (req, res) => {
             },
             提供元の住所: fields.提供元の住所,
             作業所長名: fields.作業所長名,
-            画像URL: existingImageKey,
             ModifiedDate: new Date().toISOString(),
             LastUpdatedFrom: 'Website'
         };
 
-        const updateCommand = new PutObjectCommand({
+        // Save updated products.json
+        await s3.putObject({
             Bucket: 'my-lists-images',
             Key: 'products.json',
             Body: JSON.stringify(products),
             ContentType: 'application/json'
-        });
-        await s3Client.send(updateCommand);
-
-        // Generate presigned URL for response
-        const signedUrl = existingImageKey ? await generatePresignedUrl(existingImageKey) : '';
-        const responseProduct = {
-            ...products[productIndex],
-            画像URL: signedUrl
-        };
+        }).promise();
 
         res.json({
             success: true,
             message: '更新が完了しました',
-            updatedProduct: responseProduct
+            updatedProduct: products[productIndex]
         });
 
     } catch (error) {

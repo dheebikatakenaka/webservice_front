@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MdDelete, MdEdit } from 'react-icons/md';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 import CompletionDialog from './CompletionDialog';
@@ -8,7 +8,6 @@ import EditProductModal from './EditProductModal';
 import UpdateCompletionDialog from './UpdateCompletionDialog';
 import api from '../api/config';
 import { API_BASE_URL, ERROR_MESSAGES } from '../utils/constants';
-
 
 const PinContainer = styled.div`
   break-inside: avoid;
@@ -29,7 +28,7 @@ const IconsContainer = styled.div`
 `;
 
 const IconButton = styled.button`
-  background: ${props => props.delete ? '#E60023' : '#000000'};
+  background: ${props => props.delete ? '#0A8F96' : '#000000'};
   color: white;
   border: none;
   border-radius: 50%;
@@ -99,11 +98,23 @@ const Pin = ({
     refreshGrid 
 }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showDeleteCompletion, setShowDeleteCompletion] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showUpdateCompletion, setShowUpdateCompletion] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleRedirectAfterDelete = () => {
+        const currentPath = location.pathname;
+        if (currentPath === '/') {
+            navigate('/', { replace: true });
+        } else if (currentPath.includes('/product/')) {
+            navigate('/products', { replace: true });
+        } else {
+            navigate('/products', { replace: true });
+        }
+    };
 
     const handleClick = () => {
         navigate(`/product/${id}`, {
@@ -126,32 +137,11 @@ const Pin = ({
         });
     };
 
-// In Pin.js - Update the handleDelete function
-const handleDelete = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodeURIComponent(title)}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            setShowDeleteConfirm(false);
-            // Use navigate instead of window.location.reload
-            navigate('/products', { replace: true });
-            if (onDeleteSuccess) {
-                await onDeleteSuccess();
-            }
-        } else {
-            throw new Error(result.message);
-        }
-    } catch (error) {
-        console.error('Delete error:', error);
-        alert('削除に失敗しました: ' + error.message);
-    }
-};
+    const handleDelete = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowDeleteConfirm(true);
+    };
 
     const handleEdit = (e) => {
         e.stopPropagation();
@@ -167,21 +157,16 @@ const handleDelete = async () => {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             const data = await response.json();
             
             if (data.success) {
                 setShowDeleteConfirm(false);
                 setShowDeleteCompletion(true);
-                
-                // 削除成功後の処理
                 if (onDeleteSuccess) {
-                    await onDeleteSuccess(); // awaitを追加
-                    window.location.reload()
+                    await onDeleteSuccess();
                 }
-                if (refreshGrid) {
-                    await refreshGrid(); // awaitを追加
-                }
+                handleRedirectAfterDelete();
             } else {
                 throw new Error(data.message || '削除に失敗しました');
             }
@@ -197,8 +182,8 @@ const handleDelete = async () => {
         setShowEditModal(false);
         setShowUpdateCompletion(true);
         if (refreshGrid) {
-            window.location.reload()
             await refreshGrid();
+            handleRedirectAfterDelete();
         }
     };
 
@@ -207,11 +192,11 @@ const handleDelete = async () => {
             <PinContainer>
                 <Container onClick={handleClick}>
                     <PinImage src={image} alt={title} />
-                    <IconsContainer>
-                        <IconButton onClick={handleEdit}>
+                    <IconsContainer onClick={e => e.stopPropagation()}>
+                        <IconButton onClick={handleEdit} type="button">
                             <MdEdit size={16} />
                         </IconButton>
-                        <IconButton delete onClick={handleDelete}>
+                        <IconButton delete onClick={handleDelete} type="button">
                             <MdDelete size={16} />
                         </IconButton>
                     </IconsContainer>

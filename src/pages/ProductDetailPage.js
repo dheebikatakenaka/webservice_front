@@ -8,7 +8,7 @@ import UpdateCompletionDialog from '../components/UpdateCompletionDialog';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 const DetailContainer = styled.div`
-  padding: 80px 20px 20px;
+  padding: 145px 20px 20px;
   max-width: 1200px;
   margin: 0 auto;
 `;
@@ -63,7 +63,7 @@ const IconsContainer = styled.div`
 `;
 
 const IconButton = styled.button`
-  background: ${props => props.delete ? '#E60023' : '#000000'};
+  background: ${props => props.delete ? '#0A8F96' : '#000000'};
   color: white;
   border: none;
   border-radius: 50%;
@@ -111,12 +111,11 @@ const ProductDetailPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUpdateCompletion, setShowUpdateCompletion] = useState(false);
+  const [error, setError] = useState(null);
+  
   const { state } = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
-
-  // Add error state
-  const [error, setError] = useState(null);
 
   // Redirect if no state
   useEffect(() => {
@@ -146,8 +145,6 @@ const ProductDetailPage = () => {
       setShowEditModal(false);
       setShowUpdateCompletion(true);
       console.log('Updated product:', updatedProduct);
-      // Optional: Refresh data after update
-      // await fetchUpdatedData();
     } catch (error) {
       console.error('Update error:', error);
       setError('更新に失敗しました');
@@ -168,13 +165,10 @@ const ProductDetailPage = () => {
     if (!dateString) return '未設定';
 
     try {
-      // Handle SharePoint date format "/Date(1234567890000)/"
       if (dateString.includes('/Date(')) {
         const timestamp = parseInt(dateString.replace('/Date(', '').replace(')/', ''));
         return new Date(timestamp).toLocaleDateString('ja-JP');
       }
-
-      // Handle regular date string
       return new Date(dateString).toLocaleDateString('ja-JP');
     } catch (error) {
       console.error('Date parsing error:', error);
@@ -227,7 +221,14 @@ const ProductDetailPage = () => {
           <InfoItem>
             <InfoLabel>数量</InfoLabel>
             <InfoValue>
-              {state.quantity ? `${state.quantity}${state.unit || ''}` : '未設定'}
+              {state.quantity || '未設定'}
+            </InfoValue>
+          </InfoItem>
+
+          <InfoItem>
+            <InfoLabel>単位</InfoLabel>
+            <InfoValue>
+              {state.unit || '未設定'}
             </InfoValue>
           </InfoItem>
 
@@ -268,25 +269,17 @@ const ProductDetailPage = () => {
         </ZoomedImage>
       )}
 
-      {showDeleteConfirm && (
-        <DeleteConfirmationDialog
-          productName={state.title}
-          onCancel={() => setShowDeleteConfirm(false)}
-          onDelete={handleDeleteConfirm}
-        />
-      )}
-
       {showEditModal && (
         <EditProductModal
           product={{
             ...state,
-            Title: state.title || '未設定', // Changed to match backend expectations
-            商品説明: state.description || '未設定',
-            商品分類: state.category || '未設定',
+            Title: state.title,
+            商品説明: state.description || '',
+            商品分類: state.category || '',
             提供開始日: state.startDate || null,
             提供終了日: state.endDate || null,
-            数量: state.quantity || '',
-            単位: state.unit || '',
+            数量: state.quantity || '', 
+            単位: state.unit || '',     
             提供者の連絡先: {
               Email: state.contactInfo || '',
               LookupValue: state.contactName || ''
@@ -299,15 +292,11 @@ const ProductDetailPage = () => {
         />
       )}
 
-
       {showDeleteConfirm && (
         <DeleteConfirmationDialog
           productName={state.title}
           onCancel={() => setShowDeleteConfirm(false)}
-          onDelete={() => {
-            setShowDeleteConfirm(false);
-            navigate('/products');
-          }}
+          onDelete={handleDeleteConfirm}
         />
       )}
 

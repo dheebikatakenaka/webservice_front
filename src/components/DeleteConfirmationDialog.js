@@ -1,6 +1,6 @@
-import React from 'react';
 import styled from 'styled-components';
 import { deleteProduct } from '../services/s3Service';
+import React, { useState, useEffect } from 'react';
 
 const DialogOverlay = styled.div`
     position: fixed;
@@ -47,7 +47,7 @@ const Button = styled.button`
     cursor: pointer;
     
     ${props => props.delete ? `
-        background-color: #E60023;
+        background-color: #0A8F96;
         color: white;
     ` : `
         background-color: #efefef;
@@ -55,39 +55,43 @@ const Button = styled.button`
     `}
 `;
 
-const DeleteConfirmationDialog = ({ productId, productName, onCancel, onDelete }) => {
-    const API_BASE_URL = 'http://172.16.50.168:3000';
-    const [isDeleting, setIsDeleting] = React.useState(false);
+const DeleteConfirmationDialog = ({ productName, onCancel, onDelete }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
         try {
-            const encodedTitle = encodeURIComponent(productName);
-            const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodedTitle}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-    
-            const result = await response.json();
+            const result = await deleteProduct(productName);
             
             if (result.success) {
-                onDelete();
-                window.location.reload(); // Add this line to refresh the page
+                if (onDelete) {
+                    await onDelete();
+                    window.location.href = '/pinterest';
+                }
+                // Close the dialog first
+                onCancel();
+                // Then refresh the page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
             } else {
                 throw new Error(result.message || '削除に失敗しました');
             }
         } catch (error) {
             console.error('Delete error:', error);
-            alert('削除に失敗しました: ' + error.message);
+            // Close the dialog even if there's an error
+            onCancel();
+            // Refresh after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } finally {
             setIsDeleting(false);
         }
     };
 
     return (
-        <DialogOverlay onClick={onCancel}>
+        <DialogOverlay onClick={e => e.stopPropagation()}>
             <DialogContent onClick={e => e.stopPropagation()}>
                 <Title>商品の削除</Title>
                 <Message>
