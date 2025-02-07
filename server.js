@@ -10,7 +10,7 @@ const app = express();
 
 // Middleware setup
 app.use(cors({
-    origin: ['http://172.16.50.168:3000', 'http://localhost:3000', 'https://d1r7jlana2z5u0.cloudfront.net'],
+    origin: ['http://172.16.50.168:3000', 'http://localhost:3000', 'https://d1r7jlana2z5u0.cloudfront.net', 'http://d1r7jlana2z5u0.cloudfront.net'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
