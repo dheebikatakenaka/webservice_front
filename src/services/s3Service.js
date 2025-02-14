@@ -1,8 +1,8 @@
-const API_BASE_URL = 'http://172.16.50.168:3000';
+const API_BASE_URL = 'https://2qc3vgdkv3.execute-api.ap-northeast-1.amazonaws.com/dev';
 
 export const getImagesFromS3 = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/products`);
+        const response = await fetch(`${API_BASE_URL}/products`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -57,7 +57,7 @@ export const createProduct = async (formData) => {
 
         uploadData.append('data', JSON.stringify(productData));
 
-        const response = await fetch(`${API_BASE_URL}/api/products/create`, {
+        const response = await fetch(`${API_BASE_URL}/create`, {
             method: 'POST',
             body: uploadData
         });
@@ -77,7 +77,7 @@ export const createProduct = async (formData) => {
 
 export const updateProduct = async (itemId, fields) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/products/update`, {
+        const response = await fetch(`${API_BASE_URL}/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export const deleteProduct = async (title) => {
         const encodedTitle = encodeURIComponent(title);
         console.log('Deleting product:', title);
 
-        const response = await fetch(`${API_BASE_URL}/api/products/delete/${encodedTitle}`, {
+        const response = await fetch(`${API_BASE_URL}/delete/${encodedTitle}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
